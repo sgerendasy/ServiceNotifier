@@ -7,3 +7,9 @@
 /build
 /captures
 .externalNativeBuild
+gradle/
+projectFilesBackup/
+projectFilesBackup1/
+projectFilesBackup2/
+projectFilesBackup3/
+.idea
