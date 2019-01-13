@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name">ServiceIndicator</string>
+    <string name="appwidget_text">EXAMPLE</string>
+    <string name="add_widget">Add widget</string>
+    <string name="SI">Service Indicator</string>
+    <string name="turn_on">0</string>
+    <string name="turn_off">X</string>
+    <string name="AppOnPref">AppOn</string>
+    <string name="VolumePref">VolumePref</string>
+    <string name="ServiceLogFilename">ServiceLogFilename</string>
+    <string name="Settings">Additional Settings</string>
+    <string name="HourFormatPref">HourFormatPref</string>
+    <string name="DateFormatPref">DateFormatPref</string>
+    <string name="SettingsLabel">Additional Settings</string>
+    <string name="TwelveHour">12 Hour</string>
+    <string name="TwentyFourHour">24 Hour</string>
+    <string name="DDMMYYYY">DD/MM/YYYY</string>
+    <string name="MMDDYYYY">MM/DD/YYYY</string>
+    <string name="TimeFormatString">Time Format</string>
+    <string name="DateFormatLiteral">DateFormat</string>
+    <string name="SaveLogsLiteral">Number of logs to save</string>
+    <string name="TenLogsLit">10 Logs</string>
+    <string name="FiftyLogsLit">50 Logs</string>
+    <string name="HundredLogsLit">100 Logs</string>
+    <string name="InfLogsLit">Infinite Logs</string>
+</resources>

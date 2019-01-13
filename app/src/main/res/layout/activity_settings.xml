@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".Settings">
+
+
+    <LinearLayout
+        android:layout_width="365dp"
+        android:layout_height="506dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/TimeFormatString"
+            android:textSize="16sp"
+            tools:layout_editor_absoluteX="139dp"
+            tools:layout_editor_absoluteY="33dp" />
+
+        <RadioGroup
+            android:id="@+id/timeFormat"
+            android:layout_width="351dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <RadioButton
+                android:id="@+id/TwelveHour"
+                android:layout_width="181dp"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="@string/TwelveHour" />
+
+            <RadioButton
+                android:id="@+id/TwentyFourHour"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/TwentyFourHour" />
+        </RadioGroup>
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="22dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/DateFormatLiteral"
+            android:textSize="16sp"
+            tools:layout_editor_absoluteX="139dp"
+            tools:layout_editor_absoluteY="33dp" />
+
+        <RadioGroup
+            android:id="@+id/dateFormat"
+            android:layout_width="351dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <RadioButton
+                android:id="@+id/DDMMYYYY"
+                android:layout_width="181dp"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="@string/DDMMYYYY" />
+
+            <RadioButton
+                android:id="@+id/MMDDYYYY"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/MMDDYYYY" />
+
+        </RadioGroup>
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="22dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/SaveLogsLiteral"
+            android:textSize="16sp"
+            tools:layout_editor_absoluteX="139dp"
+            tools:layout_editor_absoluteY="33dp" />
+
+        <RadioGroup
+            android:id="@+id/SaveLogs"
+            android:layout_width="351dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <RadioButton
+                android:id="@+id/TenLogsRadioButton"
+                android:layout_width="181dp"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="@string/TenLogsLit" />
+
+            <RadioButton
+                android:id="@+id/FiftyLogsRadioButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/FiftyLogsLit" />
+
+            <RadioButton
+                android:id="@+id/OneHundredLogsRadioButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/HundredLogsLit" />
+
+            <RadioButton
+                android:id="@+id/InfiniteLogsRadioButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/InfLogsLit" />
+
+        </RadioGroup>
+    </LinearLayout>
+
+
+</android.support.constraint.ConstraintLayout>
