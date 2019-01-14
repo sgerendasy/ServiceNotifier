@@ -9,8 +9,8 @@ import android.media.MediaPlayer;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
-import android.support.v4.widget.SlidingPaneLayout;
-import android.support.v4.widget.SlidingPaneLayout.PanelSlideListener;
+import android.preference.PreferenceManager;
+import android.support.design.widget.TabLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -20,52 +20,40 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.ListView;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.InputStreamReader;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
-import java.util.Locale;
-import java.util.TimeZone;
+import java.util.HashMap;
 
-import static com.example.email.serviceindicator.MainActivity.logArray;
+import static com.example.email.serviceindicator.MainActivity.MOBILE_OFF_TYPE;
+import static com.example.email.serviceindicator.MainActivity.MOBILE_ON_TYPE;
+import static com.example.email.serviceindicator.MainActivity.WIFI_OFF_TYPE;
+import static com.example.email.serviceindicator.MainActivity.WIFI_ON_TYPE;
+import static com.example.email.serviceindicator.MainActivity.logEntryDateTimeFormat;
 import static com.example.email.serviceindicator.MainActivity.mediaPlayer;
 import static com.example.email.serviceindicator.MainActivity.mobileConnected;
-
-
 import static com.example.email.serviceindicator.MainActivity.wifiConnected;
-import static com.example.email.serviceindicator.ServiceIndicatorWidget.WidgetButtonTag;
 
 class LogEntry
 {
-    boolean is12HourFormat;
-    boolean isMMDDFormat;
-    public String date;
-    public String time;
+    public String dateTime;
     public String connectionInfo;
 
-    public LogEntry(String date, boolean isMMDD, String time, boolean is12Hour, String connInfo)
+
+    public LogEntry(String datetime, String connInfo)
     {
-        this.date = date;
-        this.time = time;
+        this.dateTime = datetime;
         this.connectionInfo = connInfo;
-        this.isMMDDFormat = isMMDD;
-        this.is12HourFormat = is12Hour;
     }
 
     @Override
@@ -74,23 +62,14 @@ class LogEntry
         StringBuilder tempOutputString = new StringBuilder();
         try
         {
-            String dateFormat = isMMDDFormat ? "MM/dd/yyyy" : "dd/MM/yyyy";
-            DateFormat df = new SimpleDateFormat(dateFormat);
+            String dateFormat = MainActivity.isMMDDFormat ? "MM/dd/yyyy" : "dd/MM/yyyy";
+            String timeFormat = MainActivity.is12HourFormat ? "hh:mm:ss a" : "HH:mm:ss";
 
-            String timeFormat = is12HourFormat ? "hh:mm:ss a" : "HH:mm:ss";
-            DateFormat tf = new SimpleDateFormat(timeFormat);
+            DateFormat datetimeFormat = new SimpleDateFormat(MainActivity.logEntryDateTimeFormat);
+            Date tempDateTime = datetimeFormat.parse(this.dateTime);
 
-            Date tempDate = df.parse(this.date);
-            Date tempTime = tf.parse(this.time);
-
-            String outputDateFormat = MainActivity.isMMDDFormat ? "MM/dd/yyyy" : "dd/MM/yyyy";
-            DateFormat outputDate = new SimpleDateFormat(outputDateFormat);
-
-            String outputTimeFormat = MainActivity.is12HourFormat ? "hh:mm:ss a" : "HH:mm:ss";
-            DateFormat outputTime = new SimpleDateFormat(outputTimeFormat);
-
-            tempOutputString.append(outputDate.format(tempDate)).append(" - ");
-            tempOutputString.append(outputTime.format(tempTime)).append("\n");
+            DateFormat outputDateTime = new SimpleDateFormat(dateFormat + " " + timeFormat);
+            tempOutputString.append(outputDateTime.format(tempDateTime)).append("\n");
             tempOutputString.append(this.connectionInfo);
         }
         catch (ParseException e)
@@ -103,27 +82,44 @@ class LogEntry
 
 public class MainActivity extends AppCompatActivity {
 
+    public static final String TAG = "MAIN_ACTIVITY";
     // Whether there is a Wi-Fi connection.
     public static boolean wifiConnected = false;
     // Whether there is a mobile connection.
     public static boolean mobileConnected = false;
 
+    public static final String logEntryDateTimeFormat = "yyyy-MM-dd HH:mm:ss";
+
+    static final HashMap<String, Integer> soundTypeTable = new HashMap<>();
+    static final HashMap<Integer, Integer> soundIdToButtonId = new HashMap<>();
+
     public static ArrayList<LogEntry> logArray = new ArrayList<>();
     ArrayAdapter<LogEntry> arrayAdapter;
+
+    public static HashMap<String, Integer> soundsDict;
+    public static String currentSoundTypeTab = "Mobile On";
+
     public static MainActivity MA;
     private SlidingUpPanelLayout mLayout;
     // The BroadcastReceiver that tracks network connectivity changes.
     public static NetworkReceiver receiver = new NetworkReceiver();
 
+    public SharedPreferences sharedPref;
     public static boolean is12HourFormat;
     public static boolean isMMDDFormat;
 
     public static String mobileName = "unknown";
     public static String wifiName = "unknown";
 
+    public static final String MOBILE_ON_TYPE = "Mobile On";
+    public static final String MOBILE_OFF_TYPE = "Mobile Off";
+    public static final String WIFI_ON_TYPE = "Wifi On";
+    public static final String WIFI_OFF_TYPE = "Wifi Off";
+
     public static IntentFilter filter;
     private AudioManager mAudioManager;
     public static MediaPlayer mediaPlayer = new MediaPlayer();
+    private LogEntrySQL logEntryDB;
 
     public static MainActivity getInstance()
     {
@@ -152,10 +148,11 @@ public class MainActivity extends AppCompatActivity {
         return tempName;
     }
 
-    public void addLog(String date, boolean isMMDD, String time, boolean is12Hour, String connInfo)
+    public void addLog(String dateTime, String connInfo)
     {
-        LogEntry newLog = new LogEntry(date, isMMDD, time, is12Hour, connInfo);
-        logArray.add(newLog);
+        LogEntry newLog = new LogEntry(dateTime, connInfo);
+        logArray.add(0, newLog);
+        logEntryDB.addEntry(newLog);
         arrayAdapter.notifyDataSetChanged();
         try
         {
@@ -183,42 +180,20 @@ public class MainActivity extends AppCompatActivity {
 
         mAudioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
 
-        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+        sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         CheckBox appOnCheckbox = (CheckBox) findViewById(R.id.checkBox);
         appOnCheckbox.setChecked(sharedPref.getBoolean(getResources().getString(R.string.AppOnPref), true));
         SeekBar volumeSlider = (SeekBar) findViewById(R.id.volumeBar);
         volumeSlider.setProgress(sharedPref.getInt(getResources().getString(R.string.VolumePref), 70));
         ((TextView)findViewById(R.id.volumeLabel)).setText("Volume: " + volumeSlider.getProgress() + "%");
         mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, volumeSlider.getProgress(), AudioManager.FLAG_VIBRATE);
-        is12HourFormat = sharedPref.getBoolean(getResources().getString(R.string.HourFormatPref), true);
-        isMMDDFormat = sharedPref.getBoolean(getResources().getString(R.string.DateFormatPref), true);
+        is12HourFormat = sharedPref.getBoolean(getResources().getString(R.string.IsTwelveHourBoolean), true);
+        isMMDDFormat = sharedPref.getBoolean(getResources().getString(R.string.ISMMDDFormatBoolean), true);
 
+        logEntryDB = new LogEntrySQL(this);
+        logArray = logEntryDB.getLogs(sharedPref.getInt(getResources().getString(R.string.SaveLogsValue), 10));
 
-
-        try
-        {
-            // clear logs
-//            FileOutputStream temp = this.openFileOutput(getResources().getString(R.string.ServiceLogFilename), Context.MODE_PRIVATE);
-//            temp.write("".getBytes());
-//            temp.close();
-
-            FileInputStream logFileStream = this.openFileInput(getResources().getString(R.string.ServiceLogFilename));
-            BufferedReader reader = new BufferedReader(new InputStreamReader(logFileStream));
-            String logDateTimeLine = reader.readLine();
-            while (logDateTimeLine != null)
-            {
-//                String logContentLine = reader.readLine();
-//                logArray.add(logDateTimeLine + "\n" + logContentLine);
-                System.out.println(logDateTimeLine);
-                logDateTimeLine = reader.readLine();
-            }
-
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-
+        populateSoundsDict();
 
         // perform seek bar change listener event used for getting the progress value
         volumeSlider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -226,7 +201,6 @@ public class MainActivity extends AppCompatActivity {
 
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 progressChangedValue = progress;
-                SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
                 sharedPref.edit().putInt(getResources().getString(R.string.VolumePref), progress).apply();
                 ((TextView)findViewById(R.id.volumeLabel)).setText("Volume: " + progress + "%");
                 mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, progress, AudioManager.FLAG_VIBRATE);
@@ -249,7 +223,7 @@ public class MainActivity extends AppCompatActivity {
         lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Toast.makeText(MainActivity.this, "onItemClick", Toast.LENGTH_SHORT).show();
+                // handle on log item clicked
             }
         });
 
@@ -258,8 +232,6 @@ public class MainActivity extends AppCompatActivity {
                 this,
                 android.R.layout.simple_list_item_1,
                 logArray );
-
-
         lv.setAdapter(arrayAdapter);
 
         mLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
@@ -282,6 +254,23 @@ public class MainActivity extends AppCompatActivity {
                 mLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
             }
         });
+        TabLayout soundTypeTabLayout = (TabLayout) findViewById(R.id.ChooseSoundTabLayout);
+        soundTypeTabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                setCurrentTab(tab.getPosition());
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+
+            }
+        });
 
         this.getApplicationContext().registerReceiver(receiver, filter);
     }
@@ -300,8 +289,10 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()){
-
+        if (item.getTitle().toString().equals(getResources().getString(R.string.SettingsLabel)))
+        {
+            Intent settingsIntent = new Intent(this, Settings.class);
+            startActivity(settingsIntent);
         }
         return super.onOptionsItemSelected(item);
     }
@@ -334,14 +325,70 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
     public void AppOn(View view)
     {
         // Unregisters BroadcastReceiver when app is destroyed.
+        logEntryDB.getLogs(10);
         boolean isOn = ((CheckBox)view).isChecked();
         SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
         sharedPref.edit().putBoolean("AppOn", isOn).apply();
         toggleService(isOn);
+    }
+
+    public void populateSoundsDict()
+    {
+        soundTypeTable.put(MOBILE_ON_TYPE, sharedPref.getInt(MOBILE_ON_TYPE, R.raw.on_mobile));
+        soundTypeTable.put(MOBILE_OFF_TYPE, sharedPref.getInt(MOBILE_OFF_TYPE, R.raw.off_mobile));
+        soundTypeTable.put(WIFI_ON_TYPE, sharedPref.getInt(WIFI_ON_TYPE, R.raw.on_wifi));
+        soundTypeTable.put(WIFI_OFF_TYPE, sharedPref.getInt(WIFI_OFF_TYPE, R.raw.off_wifi));
+
+        soundsDict = new HashMap<>();
+        soundsDict.put(getResources().getString(R.string.MobileOnSound), R.raw.on_mobile);
+        soundsDict.put(getResources().getString(R.string.MobileOffSound), R.raw.off_mobile);
+        soundsDict.put(getResources().getString(R.string.WifiOnSound), R.raw.on_wifi);
+        soundsDict.put(getResources().getString(R.string.WifiOffSound), R.raw.off_wifi);
+
+        soundIdToButtonId.put(R.raw.on_mobile, R.id.SOUNDMobileOnButton);
+        soundIdToButtonId.put(R.raw.off_mobile, R.id.SOUNDMobileOffButton);
+        soundIdToButtonId.put(R.raw.on_wifi, R.id.SOUNDWifiOnButton);
+        soundIdToButtonId.put(R.raw.off_wifi, R.id.SOUNDWifiOffButton);
+
+        TabLayout soundsTabLayout = (TabLayout) findViewById(R.id.ChooseSoundTabLayout);
+        setCurrentTab(soundsTabLayout.getSelectedTabPosition());
+
+    }
+
+    public void setCurrentTab(int index)
+    {
+        switch(index)
+        {
+            case 0:
+                currentSoundTypeTab = MOBILE_ON_TYPE;
+                break;
+            case 1:
+                currentSoundTypeTab = MOBILE_OFF_TYPE;
+                break;
+            case 2:
+                currentSoundTypeTab = WIFI_ON_TYPE;
+                break;
+            case 3:
+                currentSoundTypeTab = WIFI_OFF_TYPE;
+                break;
+        }
+        RadioGroup soundsGroup = (RadioGroup) findViewById(R.id.soundSelectionGroup);
+        soundsGroup.check(soundIdToButtonId.get(sharedPref.getInt(currentSoundTypeTab, soundsDict.get(currentSoundTypeTab))));
+    }
+
+    public void SoundSelected(View view)
+    {
+        String selectedText = ((RadioButton)view).getText().toString();
+        int selectedSoundId = soundsDict.get(selectedText);
+        if (sharedPref.getBoolean(getResources().getString(R.string.PreviewSoundBoolean), true))
+        {
+            mediaPlayer = MediaPlayer.create(getApplicationContext(), selectedSoundId);
+            mediaPlayer.start();
+        }
+        sharedPref.edit().putInt(currentSoundTypeTab, selectedSoundId).apply();
     }
 
     public void toggleService(boolean on)
@@ -384,38 +431,31 @@ class NetworkReceiver extends BroadcastReceiver {
             {
                 Toast.makeText(context, "WIFI Connected", Toast.LENGTH_SHORT).show();
                 wifiConnected = true;
-                mediaPlayer = MediaPlayer.create(context, R.raw.wifion1);
+
+                int currentSoundId = MainActivity.getInstance().sharedPref.getInt(WIFI_ON_TYPE, R.raw.on_wifi);
+                mediaPlayer = MediaPlayer.create(context.getApplicationContext(), currentSoundId);
                 mediaPlayer.start();
                 MainActivity.getInstance().setWifiName(networkInfo.getExtraInfo());
-                String dateFormat = MainActivity.isMMDDFormat ? "MM/dd/yyyy" : "dd/MM/yyyy";
-                DateFormat date = new SimpleDateFormat(dateFormat);
 
-                String timeFormat = MainActivity.is12HourFormat ? "hh:mm:ss a" : "HH:mm:ss";
-                DateFormat time = new SimpleDateFormat(timeFormat);
-
-                String logDate = date.format(Calendar.getInstance().getTime());
-                String logTime = time.format(Calendar.getInstance().getTime());
+                DateFormat datetimeFormat = new SimpleDateFormat(logEntryDateTimeFormat);
+                String logDatetime = datetimeFormat.format(Calendar.getInstance().getTime());
                 String connInfo = "Wifi connected to " + networkInfo.getExtraInfo();
-                MainActivity.getInstance().addLog(logDate, MainActivity.isMMDDFormat, logTime, MainActivity.is12HourFormat, connInfo);
+                MainActivity.getInstance().addLog(logDatetime, connInfo);
 
             }
             if (networkInfo.getType() == ConnectivityManager.TYPE_MOBILE && !mobileConnected) {
                 mobileConnected = true;
                 Toast.makeText(context, "Mobile Connected", Toast.LENGTH_SHORT).show();
-                mediaPlayer = MediaPlayer.create(context.getApplicationContext(), R.raw.mobileon1);
+
+                int currentSoundId = MainActivity.getInstance().sharedPref.getInt(MOBILE_ON_TYPE, R.raw.on_mobile);
+                mediaPlayer = MediaPlayer.create(context.getApplicationContext(), currentSoundId);
                 mediaPlayer.start();
                 MainActivity.getInstance().setMobileName(networkInfo.getExtraInfo());
 
-                String dateFormat = MainActivity.isMMDDFormat ? "MM/dd/yyyy" : "dd/MM/yyyy";
-                DateFormat date = new SimpleDateFormat(dateFormat);
-
-                String timeFormat = MainActivity.is12HourFormat ? "hh:mm:ss a" : "HH:mm:ss";
-                DateFormat time = new SimpleDateFormat(timeFormat);
-
-                String logDate = date.format(Calendar.getInstance().getTime());
-                String logTime = time.format(Calendar.getInstance().getTime());
+                DateFormat datetimeFormat = new SimpleDateFormat(logEntryDateTimeFormat);
+                String logDatetime = datetimeFormat.format(Calendar.getInstance().getTime());
                 String connInfo = "Mobile connected to " + networkInfo.getExtraInfo();
-                MainActivity.getInstance().addLog(logDate, MainActivity.isMMDDFormat, logTime, MainActivity.is12HourFormat, connInfo);
+                MainActivity.getInstance().addLog(logDatetime, connInfo);
             }
         }
         else
@@ -424,35 +464,29 @@ class NetworkReceiver extends BroadcastReceiver {
             {
                 Toast.makeText(context, "WIFI Disconnected", Toast.LENGTH_SHORT).show();
                 wifiConnected = false;
-                mediaPlayer = MediaPlayer.create(context, R.raw.wifioff1);
+
+                int currentSoundId = MainActivity.getInstance().sharedPref.getInt(WIFI_OFF_TYPE, R.raw.off_wifi);
+                mediaPlayer = MediaPlayer.create(context.getApplicationContext(), currentSoundId);
                 mediaPlayer.start();
-                String dateFormat = MainActivity.isMMDDFormat ? "MM/dd/yyyy" : "dd/MM/yyyy";
-                DateFormat date = new SimpleDateFormat(dateFormat);
 
-                String timeFormat = MainActivity.is12HourFormat ? "hh:mm:ss a" : "HH:mm:ss";
-                DateFormat time = new SimpleDateFormat(timeFormat);
-
-                String logDate = date.format(Calendar.getInstance().getTime());
-                String logTime = time.format(Calendar.getInstance().getTime());
+                DateFormat datetimeFormat = new SimpleDateFormat(logEntryDateTimeFormat);
+                String logDatetime = datetimeFormat.format(Calendar.getInstance().getTime());
                 String connInfo = "Wifi disconnected from " + MainActivity.getInstance().getWifiName();
-                MainActivity.getInstance().addLog(logDate, MainActivity.isMMDDFormat, logTime, MainActivity.is12HourFormat, connInfo);
+                MainActivity.getInstance().addLog(logDatetime, connInfo);
             }
             else if(!mobile && mobileConnected)
             {
                 Toast.makeText(context, "Mobile Disconnected", Toast.LENGTH_SHORT).show();
                 mobileConnected = false;
-                mediaPlayer = MediaPlayer.create(context.getApplicationContext(), R.raw.mobileoff1);
+
+                int currentSoundId = MainActivity.getInstance().sharedPref.getInt(MOBILE_OFF_TYPE, R.raw.off_mobile);
+                mediaPlayer = MediaPlayer.create(context.getApplicationContext(), currentSoundId);
                 mediaPlayer.start();
-                String dateFormat = MainActivity.isMMDDFormat ? "MM/dd/yyyy" : "dd/MM/yyyy";
-                DateFormat date = new SimpleDateFormat(dateFormat);
 
-                String timeFormat = MainActivity.is12HourFormat ? "hh:mm:ss a" : "HH:mm:ss";
-                DateFormat time = new SimpleDateFormat(timeFormat);
-
-                String logDate = date.format(Calendar.getInstance().getTime());
-                String logTime = time.format(Calendar.getInstance().getTime());
+                DateFormat datetimeFormat = new SimpleDateFormat(logEntryDateTimeFormat);
+                String logDatetime = datetimeFormat.format(Calendar.getInstance().getTime());
                 String connInfo = "Mobile disconnected from " + MainActivity.getInstance().getMobileName();
-                MainActivity.getInstance().addLog(logDate, MainActivity.isMMDDFormat, logTime, MainActivity.is12HourFormat, connInfo);
+                MainActivity.getInstance().addLog(logDatetime, connInfo);
             }
         }
 

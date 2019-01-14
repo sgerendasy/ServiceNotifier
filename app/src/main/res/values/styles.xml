@@ -6,6 +6,7 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <!--<item name="android:background">#6b7c4e</item>-->
     </style>
 
     <!-- Style for a widget "panel" - linear layout with white background. -->
@@ -30,6 +31,7 @@
 
     <style name="ActionBar" parent="ThemeOverlay.AppCompat.ActionBar">
         <item name="android:displayOptions">homeAsUp</item>
+        <item name="android:background">#843d07</item>
     </style>
 
     <!-- Style for app widget button. -->

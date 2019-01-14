@@ -38,12 +38,14 @@
                 android:layout_width="181dp"
                 android:layout_height="wrap_content"
                 android:checked="true"
+                android:onClick="TimeFormatClicked"
                 android:text="@string/TwelveHour" />
 
             <RadioButton
                 android:id="@+id/TwentyFourHour"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:onClick="TimeFormatClicked"
                 android:text="@string/TwentyFourHour" />
         </RadioGroup>
 
@@ -70,12 +72,14 @@
                 android:layout_width="181dp"
                 android:layout_height="wrap_content"
                 android:checked="true"
+                android:onClick="DateFormatClicked"
                 android:text="@string/DDMMYYYY" />
 
             <RadioButton
                 android:id="@+id/MMDDYYYY"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:onClick="DateFormatClicked"
                 android:text="@string/MMDDYYYY" />
 
         </RadioGroup>
@@ -103,27 +107,51 @@
                 android:layout_width="181dp"
                 android:layout_height="wrap_content"
                 android:checked="true"
+                android:onClick="LogNumberSelected"
                 android:text="@string/TenLogsLit" />
 
             <RadioButton
                 android:id="@+id/FiftyLogsRadioButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:onClick="LogNumberSelected"
                 android:text="@string/FiftyLogsLit" />
 
             <RadioButton
                 android:id="@+id/OneHundredLogsRadioButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:onClick="LogNumberSelected"
                 android:text="@string/HundredLogsLit" />
 
             <RadioButton
                 android:id="@+id/InfiniteLogsRadioButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:onClick="LogNumberSelected"
                 android:text="@string/InfLogsLit" />
 
         </RadioGroup>
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="22dp" />
+
+        <TextView
+            android:id="@+id/OtherSettingsLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/other_settings"
+            android:textSize="16sp" />
+
+        <CheckBox
+            android:id="@+id/previewSoundCheckbox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:onClick="PreviewSoundChecked"
+            android:text="@string/preview_alert_sound" />
+
     </LinearLayout>
 
 

@@ -9,8 +9,6 @@
     <string name="VolumePref">VolumePref</string>
     <string name="ServiceLogFilename">ServiceLogFilename</string>
     <string name="Settings">Additional Settings</string>
-    <string name="HourFormatPref">HourFormatPref</string>
-    <string name="DateFormatPref">DateFormatPref</string>
     <string name="SettingsLabel">Additional Settings</string>
     <string name="TwelveHour">12 Hour</string>
     <string name="TwentyFourHour">24 Hour</string>
@@ -23,4 +21,23 @@
     <string name="FiftyLogsLit">50 Logs</string>
     <string name="HundredLogsLit">100 Logs</string>
     <string name="InfLogsLit">Infinite Logs</string>
+    <string name="IsTwelveHourBoolean">is12hour</string>
+    <string name="ISMMDDFormatBoolean">isMMDD</string>
+    <string name="SaveLogsValue">SaveLogs</string>
+    <string name="PreviewSoundBoolean">PreviewSoundBoolean</string>
+
+    // names of sound files
+    <string name="MobileOnSound">Mobile On</string>
+    <string name="MobileOffSound">Mobile Off</string>
+    <string name="WifiOnSound">Wifi On</string>
+    <string name="WifiOffSound">Wifi Off</string>
+
+    // names of sound types
+    <string name="MobileOnType">MobileOnType</string>
+    <string name="MobileOffType">MobileOffType</string>
+    <string name="WifiOnType">WifiOnType</string>
+    <string name="WifiOffType">WifiOffType</string>
+    <string name="other_settings">Other Settings</string>
+    <string name="preview_alert_sound">Preview Alert Sound</string>
+
 </resources>
