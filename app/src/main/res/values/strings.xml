@@ -27,10 +27,17 @@
     <string name="PreviewSoundBoolean">PreviewSoundBoolean</string>
 
     // names of sound files
-    <string name="MobileOnSound">Mobile On</string>
-    <string name="MobileOffSound">Mobile Off</string>
-    <string name="WifiOnSound">Wifi On</string>
-    <string name="WifiOffSound">Wifi Off</string>
+    <string name="MobileOnSound">Guitar On</string>
+    <string name="MobileOffSound">Guitar Off</string>
+    <string name="WifiOnSound">Spaceship On</string>
+    <string name="WifiOffSound">Spaceship Off</string>
+    <string name="BirdChirpsDown">Bird Chirps Down</string>
+    <string name="BirdChirpsUp">Bird Chirps Up</string>
+    <string name="HighBlip">High Blip</string>
+    <string name="LowBlip">Low Blip</string>
+    <string name="DoubleHighBlip">Double High Blip</string>
+    <string name="DoubleLowBlip">Double Low Blip</string>
+
 
     // names of sound types
     <string name="MobileOnType">MobileOnType</string>

@@ -82,31 +82,32 @@
                 <android.support.design.widget.TabLayout
                     android:id="@+id/ChooseSoundTabLayout"
                     android:layout_width="match_parent"
-                    android:layout_height="80dp">
+                    android:layout_height="70dp"
+                    android:fillViewport="false">
 
                     <android.support.design.widget.TabItem
                         android:id="@+id/mobileOn"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Set Mobile On Sound" />
+                        android:text="Mobile On" />
 
                     <android.support.design.widget.TabItem
                         android:id="@+id/mobileOff"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Set Mobile Off Sound" />
+                        android:text="Mobile Off" />
 
                     <android.support.design.widget.TabItem
                         android:id="@+id/wifiOn"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Set Wifi On Sound" />
+                        android:text="Wifi On" />
 
                     <android.support.design.widget.TabItem
                         android:id="@+id/wifiOff"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Set Wifi Off Sound" />
+                        android:text="Wifi Off" />
                 </android.support.design.widget.TabLayout>
 
                 <RadioGroup
@@ -142,6 +143,49 @@
                         android:id="@+id/SOUNDWifiOffButton"
                         android:onClick="SoundSelected"
                         android:text="@string/WifiOffSound"/>
+
+                    <RadioButton
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/SOUNDBirdChirpsUp"
+                        android:onClick="SoundSelected"
+                        android:text="@string/BirdChirpsUp"/>
+
+                    <RadioButton
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/SOUNDBirdChirpsDown"
+                        android:onClick="SoundSelected"
+                        android:text="@string/BirdChirpsDown"/>
+
+                    <RadioButton
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/SOUNDHighBlip"
+                        android:onClick="SoundSelected"
+                        android:text="@string/HighBlip"/>
+
+                    <RadioButton
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/SOUNDLowBlip"
+                        android:onClick="SoundSelected"
+                        android:text="@string/LowBlip"/>
+
+                    <RadioButton
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/SOUNDDoubleHighBlip"
+                        android:onClick="SoundSelected"
+                        android:text="@string/DoubleHighBlip"/>
+
+                    <RadioButton
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/SOUNDDoubleLowBlip"
+                        android:onClick="SoundSelected"
+                        android:text="@string/DoubleLowBlip"/>
+
 
                 </RadioGroup>
 

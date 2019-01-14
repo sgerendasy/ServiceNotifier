@@ -347,11 +347,23 @@ public class MainActivity extends AppCompatActivity {
         soundsDict.put(getResources().getString(R.string.MobileOffSound), R.raw.off_mobile);
         soundsDict.put(getResources().getString(R.string.WifiOnSound), R.raw.on_wifi);
         soundsDict.put(getResources().getString(R.string.WifiOffSound), R.raw.off_wifi);
+        soundsDict.put(getResources().getString(R.string.BirdChirpsUp), R.raw.bird_chirps_up);
+        soundsDict.put(getResources().getString(R.string.BirdChirpsDown), R.raw.bird_chirps_down);
+        soundsDict.put(getResources().getString(R.string.HighBlip), R.raw.high_blip);
+        soundsDict.put(getResources().getString(R.string.LowBlip), R.raw.low_blip);
+        soundsDict.put(getResources().getString(R.string.DoubleHighBlip), R.raw.double_high_blip);
+        soundsDict.put(getResources().getString(R.string.DoubleLowBlip), R.raw.double_low_blip);
 
         soundIdToButtonId.put(R.raw.on_mobile, R.id.SOUNDMobileOnButton);
         soundIdToButtonId.put(R.raw.off_mobile, R.id.SOUNDMobileOffButton);
         soundIdToButtonId.put(R.raw.on_wifi, R.id.SOUNDWifiOnButton);
         soundIdToButtonId.put(R.raw.off_wifi, R.id.SOUNDWifiOffButton);
+        soundIdToButtonId.put(R.raw.bird_chirps_up, R.id.SOUNDBirdChirpsUp);
+        soundIdToButtonId.put(R.raw.bird_chirps_down, R.id.SOUNDBirdChirpsDown);
+        soundIdToButtonId.put(R.raw.high_blip, R.id.SOUNDHighBlip);
+        soundIdToButtonId.put(R.raw.low_blip, R.id.SOUNDLowBlip);
+        soundIdToButtonId.put(R.raw.double_high_blip, R.id.SOUNDDoubleHighBlip);
+        soundIdToButtonId.put(R.raw.double_low_blip, R.id.SOUNDDoubleLowBlip);
 
         TabLayout soundsTabLayout = (TabLayout) findViewById(R.id.ChooseSoundTabLayout);
         setCurrentTab(soundsTabLayout.getSelectedTabPosition());
@@ -360,23 +372,28 @@ public class MainActivity extends AppCompatActivity {
 
     public void setCurrentTab(int index)
     {
+        int defaultSound = 0;
         switch(index)
         {
             case 0:
                 currentSoundTypeTab = MOBILE_ON_TYPE;
+                defaultSound = R.raw.on_mobile;
                 break;
             case 1:
                 currentSoundTypeTab = MOBILE_OFF_TYPE;
+                defaultSound = R.raw.off_mobile;
                 break;
             case 2:
                 currentSoundTypeTab = WIFI_ON_TYPE;
+                defaultSound = R.raw.on_wifi;
                 break;
             case 3:
                 currentSoundTypeTab = WIFI_OFF_TYPE;
+                defaultSound = R.raw.off_wifi;
                 break;
         }
         RadioGroup soundsGroup = (RadioGroup) findViewById(R.id.soundSelectionGroup);
-        soundsGroup.check(soundIdToButtonId.get(sharedPref.getInt(currentSoundTypeTab, soundsDict.get(currentSoundTypeTab))));
+        soundsGroup.check(soundIdToButtonId.get(sharedPref.getInt(currentSoundTypeTab, defaultSound)));
     }
 
     public void SoundSelected(View view)
@@ -385,6 +402,11 @@ public class MainActivity extends AppCompatActivity {
         int selectedSoundId = soundsDict.get(selectedText);
         if (sharedPref.getBoolean(getResources().getString(R.string.PreviewSoundBoolean), true))
         {
+            if (mediaPlayer != null && mediaPlayer.isPlaying())
+            {
+                mediaPlayer.release();
+                mediaPlayer = null;
+            }
             mediaPlayer = MediaPlayer.create(getApplicationContext(), selectedSoundId);
             mediaPlayer.start();
         }
@@ -433,6 +455,11 @@ class NetworkReceiver extends BroadcastReceiver {
                 wifiConnected = true;
 
                 int currentSoundId = MainActivity.getInstance().sharedPref.getInt(WIFI_ON_TYPE, R.raw.on_wifi);
+                if (mediaPlayer != null && mediaPlayer.isPlaying())
+                {
+                    mediaPlayer.release();
+                    mediaPlayer = null;
+                }
                 mediaPlayer = MediaPlayer.create(context.getApplicationContext(), currentSoundId);
                 mediaPlayer.start();
                 MainActivity.getInstance().setWifiName(networkInfo.getExtraInfo());
@@ -448,6 +475,11 @@ class NetworkReceiver extends BroadcastReceiver {
                 Toast.makeText(context, "Mobile Connected", Toast.LENGTH_SHORT).show();
 
                 int currentSoundId = MainActivity.getInstance().sharedPref.getInt(MOBILE_ON_TYPE, R.raw.on_mobile);
+                if (mediaPlayer != null && mediaPlayer.isPlaying())
+                {
+                    mediaPlayer.release();
+                    mediaPlayer = null;
+                }
                 mediaPlayer = MediaPlayer.create(context.getApplicationContext(), currentSoundId);
                 mediaPlayer.start();
                 MainActivity.getInstance().setMobileName(networkInfo.getExtraInfo());
@@ -466,6 +498,11 @@ class NetworkReceiver extends BroadcastReceiver {
                 wifiConnected = false;
 
                 int currentSoundId = MainActivity.getInstance().sharedPref.getInt(WIFI_OFF_TYPE, R.raw.off_wifi);
+                if (mediaPlayer != null && mediaPlayer.isPlaying())
+                {
+                    mediaPlayer.release();
+                    mediaPlayer = null;
+                }
                 mediaPlayer = MediaPlayer.create(context.getApplicationContext(), currentSoundId);
                 mediaPlayer.start();
 
@@ -480,6 +517,11 @@ class NetworkReceiver extends BroadcastReceiver {
                 mobileConnected = false;
 
                 int currentSoundId = MainActivity.getInstance().sharedPref.getInt(MOBILE_OFF_TYPE, R.raw.off_mobile);
+                if (mediaPlayer != null && mediaPlayer.isPlaying())
+                {
+                    mediaPlayer.release();
+                    mediaPlayer = null;
+                }
                 mediaPlayer = MediaPlayer.create(context.getApplicationContext(), currentSoundId);
                 mediaPlayer.start();
 
