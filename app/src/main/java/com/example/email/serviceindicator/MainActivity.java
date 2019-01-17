@@ -117,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
     public static final String WIFI_OFF_TYPE = "Wifi Off";
 
     public static IntentFilter filter;
-    private AudioManager mAudioManager;
+    public static AudioManager mAudioManager;
     public static MediaPlayer mediaPlayer = new MediaPlayer();
     private LogEntrySQL logEntryDB;
 
@@ -308,6 +308,9 @@ public class MainActivity extends AppCompatActivity {
         updateConnectedFlags();
     }
 
+
+
+
     // Checks the network connection and sets the wifiConnected and mobileConnected
     // variables accordingly.
     public void updateConnectedFlags()
@@ -449,6 +452,10 @@ class NetworkReceiver extends BroadcastReceiver {
         if(networkInfo != null)
         {
 
+            int oldVolume = MainActivity.mAudioManager.getStreamVolume(AudioManager.STREAM_NOTIFICATION);
+            int volume = MainActivity.getInstance().sharedPref.getInt("VolumePref", 70);
+            MainActivity.mAudioManager.setStreamVolume(AudioManager.STREAM_NOTIFICATION, volume, AudioManager.FLAG_VIBRATE);
+            boolean volumeFixed = MainActivity.mAudioManager.isVolumeFixed();
             if (networkInfo.getType() == ConnectivityManager.TYPE_WIFI && !wifiConnected)
             {
                 Toast.makeText(context, "WIFI Connected", Toast.LENGTH_SHORT).show();
