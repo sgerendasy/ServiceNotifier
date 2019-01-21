@@ -21,6 +21,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -55,11 +56,13 @@ import static com.example.email.serviceindicator.MainActivity.wifiConnected;
 class SoundInfo
 {
     public int rawSoundID;
-    public int soundRadioButtonID;
-    public SoundInfo(int rawSoundID, int soundRadioButtonID)
+    public int radioButtonIndex;
+    public String soundName;
+    public SoundInfo(int rawSoundID, int radioButtonIndex, String soundName)
     {
         this.rawSoundID = rawSoundID;
-        this.soundRadioButtonID = soundRadioButtonID;
+        this.radioButtonIndex = radioButtonIndex;
+        this.soundName = soundName;
     }
 }
 
@@ -110,13 +113,12 @@ public class MainActivity extends AppCompatActivity {
 
     public static final String logEntryDateTimeFormat = "yyyy-MM-dd HH:mm:ss";
 
-    static final HashMap<String, Integer> soundTypeTable = new HashMap<>();
-
     public static ArrayList<LogEntry> logArray = new ArrayList<>();
     ArrayAdapter<LogEntry> arrayAdapter;
 
-    public static HashMap<String, SoundInfo> soundsDict;
-    public static String currentSoundTypeTab = "Mobile On";
+//    public static HashMap<String, SoundInfo> soundsDict;
+    public static ArrayList<SoundInfo> soundsArray;
+    public static String SelectedSoundType = "Mobile On";
 
     public static final int audioStreamType = AudioManager.STREAM_MUSIC;
     public static int oldVolume;
@@ -145,8 +147,11 @@ public class MainActivity extends AppCompatActivity {
     public static AudioManager mAudioManager;
     public static MediaPlayer mediaPlayer = new MediaPlayer();
     private LogEntrySQL logEntryDB;
-    public RadioGroup soundsRadioGroup;
+    public LinearLayout setSoundsLayout;
+    public static RadioGroup leftRadioGroupColumn;
+    public static RadioGroup rightRadioGroupColumn;
     public LinearLayout labelLayout;
+    public LinearLayout confirmationLayout;
 
     public static MainActivity getInstance()
     {
@@ -196,16 +201,120 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void populateRadioGroupSounds()
+    private RadioGroup.OnCheckedChangeListener leftColumnListener = new RadioGroup.OnCheckedChangeListener() {
+        @Override
+        public void onCheckedChanged(RadioGroup group, int checkedId) {
+            rightRadioGroupColumn.setOnCheckedChangeListener(null);
+            rightRadioGroupColumn.clearCheck();
+            rightRadioGroupColumn.setOnCheckedChangeListener(rightColumnListener);
+
+
+            int selectedSoundId = getSoundInfoByIndex(checkedId).rawSoundID;
+            if (sharedPref.getBoolean(getResources().getString(R.string.PreviewSoundBoolean), true))
+            {
+                if (mediaPlayer != null && mediaPlayer.isPlaying())
+                {
+                    mediaPlayer.release();
+                    mediaPlayer = null;
+                }
+                mediaPlayer = MediaPlayer.create(getApplicationContext(), selectedSoundId);
+                mediaPlayer.start();
+            }
+            sharedPref.edit().putInt(SelectedSoundType, selectedSoundId).apply();
+        }
+    };
+
+    private RadioGroup.OnCheckedChangeListener rightColumnListener = new RadioGroup.OnCheckedChangeListener() {
+        @Override
+        public void onCheckedChanged(RadioGroup group, int checkedId) {
+            leftRadioGroupColumn.setOnCheckedChangeListener(null);
+            leftRadioGroupColumn.clearCheck();
+            leftRadioGroupColumn.setOnCheckedChangeListener(leftColumnListener);
+
+            int selectedSoundId = getSoundInfoByIndex(checkedId).rawSoundID;
+            if (sharedPref.getBoolean(getResources().getString(R.string.PreviewSoundBoolean), true))
+            {
+                if (mediaPlayer != null && mediaPlayer.isPlaying())
+                {
+                    mediaPlayer.release();
+                    mediaPlayer = null;
+                }
+                mediaPlayer = MediaPlayer.create(getApplicationContext(), selectedSoundId);
+                mediaPlayer.start();
+            }
+            sharedPref.edit().putInt(SelectedSoundType, selectedSoundId).apply();
+        }
+    };
+
+    public void InitializeSoundConfirmationLayout()
     {
-        for (String buttonName : soundsDict.keySet())
+        confirmationLayout = new LinearLayout(this);
+        LinearLayout.LayoutParams confirmationParams = new RadioGroup.LayoutParams(RadioGroup.LayoutParams.WRAP_CONTENT, RadioGroup.LayoutParams.WRAP_CONTENT);
+        confirmationLayout.setLayoutParams(confirmationParams);
+        confirmationLayout.requestLayout();
+        confirmationLayout.setOrientation(LinearLayout.HORIZONTAL);
+
+        Button cancelButton = new Button(this);
+        cancelButton.setText("Cancel");
+        cancelButton.setWidth(100);
+        cancelButton.setHeight(40);
+        cancelButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
+
+        Button saveButton = new Button(this);
+        saveButton.setText("Save");
+        saveButton.setWidth(100);
+        saveButton.setHeight(40);
+        saveButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
+
+        confirmationLayout.addView(cancelButton);
+        confirmationLayout.addView(saveButton);
+    }
+
+    public void populateRadioGroupLayout()
+    {
+        setSoundsLayout = new LinearLayout(this);
+        LinearLayout radioGroupsLayout = new LinearLayout(this);
+        radioGroupsLayout.setOrientation(LinearLayout.HORIZONTAL);
+        RadioGroup.LayoutParams params = new RadioGroup.LayoutParams(RadioGroup.LayoutParams.WRAP_CONTENT, RadioGroup.LayoutParams.WRAP_CONTENT);
+        radioGroupsLayout.setLayoutParams(params);
+        radioGroupsLayout.requestLayout();
+        leftRadioGroupColumn = new RadioGroup(this);
+        leftRadioGroupColumn.setMinimumWidth(getResources().getDisplayMetrics().widthPixels / 2);
+        rightRadioGroupColumn = new RadioGroup(this);
+        rightRadioGroupColumn.setMinimumWidth(getResources().getDisplayMetrics().widthPixels / 2);
+
+        leftRadioGroupColumn.setOnCheckedChangeListener(leftColumnListener);
+        rightRadioGroupColumn.setOnCheckedChangeListener(rightColumnListener);
+
+
+        for (int i = 0; i < soundsArray.size() / 2; i++)
         {
             RadioButton newRadioButton = new RadioButton(this);
-            newRadioButton.setId(soundsDict.get(buttonName).soundRadioButtonID);
-            newRadioButton.setText(buttonName);
-            soundsRadioGroup.addView(newRadioButton);
+            newRadioButton.setText(soundsArray.get(i).soundName);
+            newRadioButton.setId(soundsArray.get(i).radioButtonIndex);
+            leftRadioGroupColumn.addView(newRadioButton);
         }
+        for (int i = soundsArray.size() / 2; i < soundsArray.size(); i++)
+        {
+            RadioButton newRadioButton = new RadioButton(this);
+            newRadioButton.setText(soundsArray.get(i).soundName);
+            newRadioButton.setId(soundsArray.get(i).radioButtonIndex);
+            rightRadioGroupColumn.addView(newRadioButton);
+        }
+        radioGroupsLayout.addView(leftRadioGroupColumn);
+        radioGroupsLayout.addView(rightRadioGroupColumn);
 
+        setSoundsLayout.addView(radioGroupsLayout);
     }
 
     @Override
@@ -216,12 +325,10 @@ public class MainActivity extends AppCompatActivity {
         filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
         receiver = new NetworkReceiver();
         MA = this;
-        soundsRadioGroup = new RadioGroup(this);
 
         mAudioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
 
         sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-//        CheckBox appOnCheckbox = (CheckBox) findViewById(R.id.checkBox);
         ImageButton appOnButton = (ImageButton) findViewById(R.id.appOnButton);
 
         appIsOn = sharedPref.getBoolean(getResources().getString(R.string.AppOnPref), true);
@@ -238,8 +345,9 @@ public class MainActivity extends AppCompatActivity {
         logArray = logEntryDB.getLogs(sharedPref.getInt(getResources().getString(R.string.SaveLogsValue), 10));
 
         populateSoundsDict();
-        populateRadioGroupSounds();
+        populateRadioGroupLayout();
         InitializeSoundSelectionLabel();
+        InitializeSoundConfirmationLayout();
 
         // perform seek bar change listener event used for getting the progress value
         volumeSlider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -300,23 +408,6 @@ public class MainActivity extends AppCompatActivity {
                 mLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
             }
         });
-//        TabLayout soundTypeTabLayout = (TabLayout) findViewById(R.id.ChooseSoundTabLayout);
-//        soundTypeTabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
-//            @Override
-//            public void onTabSelected(TabLayout.Tab tab) {
-//                setCurrentTab(tab.getPosition());
-//            }
-//
-//            @Override
-//            public void onTabUnselected(TabLayout.Tab tab) {
-//
-//            }
-//
-//            @Override
-//            public void onTabReselected(TabLayout.Tab tab) {
-//
-//            }
-//        });
 
         this.getApplicationContext().registerReceiver(receiver, filter);
     }
@@ -395,16 +486,19 @@ public class MainActivity extends AppCompatActivity {
 
         if (editSoundsButtonPressed)
         {
+            // toggle "edit sound" view off
             ((ImageButton)view).setImageResource(R.drawable.set_alert_sounds);
             editSoundsButtonPressed = false;
             findViewById(R.id.mobileButtonsLayout).setVisibility(View.INVISIBLE);
             findViewById(R.id.wifiButtonsLayout).setVisibility(View.INVISIBLE);
             LinearLayout editSoundsLayout = (LinearLayout)findViewById(R.id.editSoundButtonsLayout);
-            editSoundsLayout.removeView(soundsRadioGroup);
+            editSoundsLayout.removeView(setSoundsLayout);
             editSoundsLayout.removeView(labelLayout);
+            editSoundsLayout.removeView(confirmationLayout);
         }
         else
         {
+            // toggle "edit sound" view on
             ((ImageButton)view).setImageResource(R.drawable.set_alert_sounds_pressed);
             findViewById(R.id.mobileButtonsLayout).setVisibility(View.VISIBLE);
             findViewById(R.id.wifiButtonsLayout).setVisibility(View.VISIBLE);
@@ -415,25 +509,46 @@ public class MainActivity extends AppCompatActivity {
     public void SoundSelectionMade(View view)
     {
         LinearLayout editSoundsLayout = (LinearLayout)findViewById(R.id.editSoundButtonsLayout);
-        editSoundsLayout.addView(soundsRadioGroup, 0);
+        editSoundsLayout.addView(confirmationLayout,0);
+        editSoundsLayout.addView(setSoundsLayout, 0);
         editSoundsLayout.addView(labelLayout, 0);
         findViewById(R.id.mobileButtonsLayout).setVisibility(View.INVISIBLE);
         findViewById(R.id.wifiButtonsLayout).setVisibility(View.INVISIBLE);
 
+
+        int defaultSoundId = 0;
         switch (view.getId())
         {
             case R.id.mobile_on_button:
+                SelectedSoundType = MOBILE_ON_TYPE;
                 ((TextView)labelLayout.getChildAt(1)).setText("mobile on");
+                defaultSoundId = R.raw.on_mobile;
                 break;
             case R.id.mobile_off_button:
+                SelectedSoundType = MOBILE_OFF_TYPE;
                 ((TextView)labelLayout.getChildAt(1)).setText("mobile off");
+                defaultSoundId = R.raw.off_mobile;
                 break;
             case R.id.wifi_on_button:
+                SelectedSoundType = WIFI_ON_TYPE;
                 ((TextView)labelLayout.getChildAt(1)).setText("wifi on");
+                defaultSoundId = R.raw.on_wifi;
                 break;
             case R.id.wifi_off_button:
+                SelectedSoundType = WIFI_OFF_TYPE;
                 ((TextView)labelLayout.getChildAt(1)).setText("wifi off");
+                defaultSoundId = R.raw.off_wifi;
                 break;
+        }
+        int selectedSoundId = sharedPref.getInt(SelectedSoundType, defaultSoundId);
+        int radioButtonIndex = getSoundInfo(selectedSoundId).radioButtonIndex;
+        if (radioButtonIndex >= soundsArray.size() / 2)
+        {
+            rightRadioGroupColumn.check(radioButtonIndex % soundsArray.size() / 2);
+        }
+        else
+        {
+            leftRadioGroupColumn.check(radioButtonIndex);
         }
     }
 
@@ -475,66 +590,48 @@ public class MainActivity extends AppCompatActivity {
 
     public void populateSoundsDict()
     {
-        soundTypeTable.put(MOBILE_ON_TYPE, sharedPref.getInt(MOBILE_ON_TYPE, R.raw.on_mobile));
-        soundTypeTable.put(MOBILE_OFF_TYPE, sharedPref.getInt(MOBILE_OFF_TYPE, R.raw.off_mobile));
-        soundTypeTable.put(WIFI_ON_TYPE, sharedPref.getInt(WIFI_ON_TYPE, R.raw.on_wifi));
-        soundTypeTable.put(WIFI_OFF_TYPE, sharedPref.getInt(WIFI_OFF_TYPE, R.raw.off_wifi));
-
-        soundsDict = new HashMap<>();
-
-        soundsDict.put(getResources().getString(R.string.MobileOnSound), new SoundInfo(R.raw.on_mobile, R.id.SOUNDMobileOnButton));
-        soundsDict.put(getResources().getString(R.string.MobileOffSound), new SoundInfo(R.raw.off_mobile, R.id.SOUNDMobileOffButton));
-        soundsDict.put(getResources().getString(R.string.WifiOnSound), new SoundInfo(R.raw.on_wifi, R.id.SOUNDWifiOnButton));
-        soundsDict.put(getResources().getString(R.string.WifiOffSound), new SoundInfo(R.raw.off_wifi, R.id.SOUNDWifiOffButton));
-        soundsDict.put(getResources().getString(R.string.BirdChirpsUp), new SoundInfo(R.raw.bird_chirps_up, R.id.SOUNDBirdChirpsUp));
-        soundsDict.put(getResources().getString(R.string.BirdChirpsDown), new SoundInfo(R.raw.bird_chirps_down, R.id.SOUNDBirdChirpsDown));
-        soundsDict.put(getResources().getString(R.string.HighBlip), new SoundInfo(R.raw.high_blip, R.id.SOUNDHighBlip));
-        soundsDict.put(getResources().getString(R.string.LowBlip), new SoundInfo(R.raw.low_blip, R.id.SOUNDLowBlip));
-        soundsDict.put(getResources().getString(R.string.DoubleHighBlip), new SoundInfo(R.raw.double_high_blip, R.id.SOUNDDoubleHighBlip));
-        soundsDict.put(getResources().getString(R.string.DoubleLowBlip), new SoundInfo(R.raw.double_low_blip, R.id.SOUNDDoubleLowBlip));
+        soundsArray = new ArrayList<>();
+        soundsArray.add(new SoundInfo(R.raw.on_mobile, 0, getResources().getString(R.string.MobileOnSound)));
+        soundsArray.add(new SoundInfo(R.raw.off_mobile, 1, getResources().getString(R.string.MobileOffSound)));
+        soundsArray.add(new SoundInfo(R.raw.on_wifi, 2, getResources().getString(R.string.WifiOnSound)));
+        soundsArray.add(new SoundInfo(R.raw.off_wifi, 3, getResources().getString(R.string.WifiOffSound)));
+        soundsArray.add(new SoundInfo(R.raw.bird_chirps_up, 4, getResources().getString(R.string.BirdChirpsUp)));
+        soundsArray.add(new SoundInfo(R.raw.bird_chirps_down, 5, getResources().getString(R.string.BirdChirpsDown)));
+        soundsArray.add(new SoundInfo(R.raw.high_blip, 6, getResources().getString(R.string.HighBlip)));
+        soundsArray.add(new SoundInfo(R.raw.low_blip, 7, getResources().getString(R.string.LowBlip)));
+        soundsArray.add(new SoundInfo(R.raw.double_high_blip, 8, getResources().getString(R.string.DoubleHighBlip)));
+        soundsArray.add(new SoundInfo(R.raw.double_low_blip, 9, getResources().getString(R.string.DoubleLowBlip)));
     }
 
-    public void setCurrentTab(int index)
+
+    public SoundInfo getSoundInfo(String soundName)
     {
-        int defaultSound = 0;
-        switch(index)
+        for (SoundInfo soundInfo : soundsArray)
         {
-            case 0:
-                currentSoundTypeTab = MOBILE_ON_TYPE;
-                defaultSound = R.raw.on_mobile;
-                break;
-            case 1:
-                currentSoundTypeTab = MOBILE_OFF_TYPE;
-                defaultSound = R.raw.off_mobile;
-                break;
-            case 2:
-                currentSoundTypeTab = WIFI_ON_TYPE;
-                defaultSound = R.raw.on_wifi;
-                break;
-            case 3:
-                currentSoundTypeTab = WIFI_OFF_TYPE;
-                defaultSound = R.raw.off_wifi;
-                break;
+            if (soundInfo.soundName.equals(soundName))
+                return soundInfo;
         }
-//        RadioGroup soundsGroup = (RadioGroup) findViewById(R.id.soundSelectionGroup);
-//        soundsGroup.check(soundIdToButtonId.get(sharedPref.getInt(currentSoundTypeTab, defaultSound)));
+        return null;
     }
 
-    public void SoundSelected(View view)
+    public SoundInfo getSoundInfo(int soundId)
     {
-        String selectedText = ((RadioButton)view).getText().toString();
-        int selectedSoundId = soundsDict.get(selectedText).rawSoundID;
-        if (sharedPref.getBoolean(getResources().getString(R.string.PreviewSoundBoolean), true))
+        for (SoundInfo soundInfo : soundsArray)
         {
-            if (mediaPlayer != null && mediaPlayer.isPlaying())
-            {
-                mediaPlayer.release();
-                mediaPlayer = null;
-            }
-            mediaPlayer = MediaPlayer.create(getApplicationContext(), selectedSoundId);
-            mediaPlayer.start();
+            if (soundInfo.rawSoundID == soundId)
+                return soundInfo;
         }
-        sharedPref.edit().putInt(currentSoundTypeTab, selectedSoundId).apply();
+        return null;
+    }
+
+    public SoundInfo getSoundInfoByIndex(int radioButtonIndex)
+    {
+        for (SoundInfo soundInfo : soundsArray)
+        {
+            if (soundInfo.radioButtonIndex == radioButtonIndex)
+                return soundInfo;
+        }
+        return null;
     }
 
     public void toggleService(boolean on)
