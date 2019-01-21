@@ -94,6 +94,12 @@ public class Settings extends AppCompatActivity {
         sharedPreferences.edit().putBoolean(getResources().getString(R.string.PreviewSoundBoolean), checkBox.isChecked()).apply();
     }
 
+    public void EnableToastChecked(View view)
+    {
+        CheckBox checkBox = (CheckBox)view;
+        sharedPreferences.edit().putBoolean(getResources().getString(R.string.EnableToastBoolean), checkBox.isChecked()).apply();
+    }
+
     public void LogNumberSelected(View view)
     {
         String key = getResources().getString(R.string.SaveLogsValue);

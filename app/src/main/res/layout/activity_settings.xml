@@ -152,6 +152,14 @@
             android:onClick="PreviewSoundChecked"
             android:text="@string/preview_alert_sound" />
 
+        <CheckBox
+            android:id="@+id/enableToastCheckbox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:onClick="EnableToastChecked"
+            android:text="@string/enable_toast_notifications" />
+
     </LinearLayout>
 
 

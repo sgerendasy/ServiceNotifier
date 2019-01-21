@@ -26,23 +26,22 @@
 
             android:layout_alignParentStart="true"
             android:layout_alignParentLeft="true"
-            android:layout_marginStart="8dp"
+            android:layout_marginStart="0dp"
 
-            android:layout_marginEnd="8dp"
+            android:layout_marginEnd="0dp"
             android:gravity="start"
             android:orientation="vertical">
 
-            <CheckBox
-                android:id="@+id/checkBox"
-                android:layout_width="93dp"
-                android:layout_height="34dp"
-                android:layout_marginStart="8dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginEnd="8dp"
-                android:layout_marginBottom="8dp"
+            <ImageButton
+                android:id="@+id/appOnButton"
+                style="?android:attr/borderlessButtonStyle"
+                android:layout_marginTop="20dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:onClick="AppOn"
-                android:saveEnabled="true"
-                android:text="App On" />
+                android:src="@drawable/disconnected_logo" />
+
 
             <TextView
                 android:id="@+id/volumeLabel"
@@ -51,8 +50,7 @@
                 android:layout_marginStart="8dp"
                 android:layout_marginEnd="8dp"
                 android:ems="10"
-                android:text="Volume"
-                android:textSize="14sp"
+                android:textSize="16sp"
                 tools:layout_editor_absoluteY="66dp" />
 
             <SeekBar
@@ -70,54 +68,110 @@
                 android:layout_width="match_parent"
                 android:layout_height="22dp" />
 
+            <ImageButton
+                android:id="@+id/editSoundTextView"
+                style="?android:attr/borderlessButtonStyle"
+                android:layout_width="match_parent"
+                android:layout_height="68dp"
+                android:contentDescription="@string/editsoundbutton"
+                android:onClick="SetSoundsButtonClicked"
+                android:src="@drawable/set_alert_sounds" />
+
             <LinearLayout
+                android:id="@+id/editSoundButtonsLayout"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:background="@color/cardview_light_background"
                 android:orientation="vertical">
 
-                <TextView
-                    android:id="@+id/editSoundTextView"
+
+                <LinearLayout
+                    android:visibility="invisible"
+                    android:id="@+id/mobileButtonsLayout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Edit sound"
-                    android:textSize="16sp" />
+                    android:orientation="horizontal">
 
-                <android.support.design.widget.TabLayout
-                    android:id="@+id/ChooseSoundTabLayout"
+                    <ImageButton
+                        android:id="@+id/mobile_on_button"
+                        style="?android:attr/borderlessButtonStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:onClick="SoundSelectionMade"
+                        android:src="@drawable/mobile_on_sound_button"/>
+
+                    <ImageButton
+                        android:id="@+id/mobile_off_button"
+                        style="?android:attr/borderlessButtonStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:onClick="SoundSelectionMade"
+                        android:src="@drawable/mobile_off_sound_button"/>
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:visibility="invisible"
+                    android:id="@+id/wifiButtonsLayout"
                     android:layout_width="match_parent"
-                    android:layout_height="70dp"
-                    android:fillViewport="false">
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
 
-                    <android.support.design.widget.TabItem
-                        android:id="@+id/mobileOn"
+                    <ImageButton
+                        android:id="@+id/wifi_on_button"
+                        style="?android:attr/borderlessButtonStyle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Mobile On" />
+                        android:onClick="SoundSelectionMade"
+                        android:src="@drawable/wifi_on_sound_button"/>
 
-                    <android.support.design.widget.TabItem
-                        android:id="@+id/mobileOff"
+                    <ImageButton
+                        android:id="@+id/wifi_off_button"
+                        style="?android:attr/borderlessButtonStyle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Mobile Off" />
+                        android:onClick="SoundSelectionMade"
+                        android:src="@drawable/wifi_off_sound_button"/>
 
-                    <android.support.design.widget.TabItem
-                        android:id="@+id/wifiOn"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Wifi On" />
+                </LinearLayout>
 
-                    <android.support.design.widget.TabItem
-                        android:id="@+id/wifiOff"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Wifi Off" />
-                </android.support.design.widget.TabLayout>
+                <!--<android.support.design.widget.TabLayout-->
+                    <!--android:visibility="invisible"-->
+                    <!--android:id="@+id/ChooseSoundTabLayout"-->
+                    <!--android:layout_width="match_parent"-->
+                    <!--android:layout_height="70dp"-->
+                    <!--android:fillViewport="false">-->
+
+                    <!--<android.support.design.widget.TabItem-->
+                        <!--android:id="@+id/mobileOn"-->
+                        <!--android:layout_width="wrap_content"-->
+                        <!--android:layout_height="wrap_content"-->
+                        <!--android:text="Mobile On" />-->
+
+                    <!--<android.support.design.widget.TabItem-->
+                        <!--android:id="@+id/mobileOff"-->
+                        <!--android:layout_width="wrap_content"-->
+                        <!--android:layout_height="wrap_content"-->
+                        <!--android:text="Mobile Off" />-->
+
+                    <!--<android.support.design.widget.TabItem-->
+                        <!--android:id="@+id/wifiOn"-->
+                        <!--android:layout_width="wrap_content"-->
+                        <!--android:layout_height="wrap_content"-->
+                        <!--android:text="Wifi On" />-->
+
+                    <!--<android.support.design.widget.TabItem-->
+                        <!--android:id="@+id/wifiOff"-->
+                        <!--android:layout_width="wrap_content"-->
+                        <!--android:layout_height="wrap_content"-->
+                        <!--android:text="Wifi Off" />-->
+                <!--</android.support.design.widget.TabLayout>-->
 
                 <RadioGroup
                     android:id="@+id/soundSelectionGroup"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
+                    android:visibility="invisible"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:orientation="vertical">
 
                     <RadioButton
@@ -192,7 +246,6 @@
 
 
                 </RadioGroup>
-
             </LinearLayout>
 
         </LinearLayout>

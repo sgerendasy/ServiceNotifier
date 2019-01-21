@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
+import android.graphics.Typeface;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.ConnectivityManager;
@@ -11,6 +13,7 @@ import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.design.widget.TabLayout;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -19,6 +22,8 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
@@ -39,10 +44,25 @@ import static com.example.email.serviceindicator.MainActivity.MOBILE_OFF_TYPE;
 import static com.example.email.serviceindicator.MainActivity.MOBILE_ON_TYPE;
 import static com.example.email.serviceindicator.MainActivity.WIFI_OFF_TYPE;
 import static com.example.email.serviceindicator.MainActivity.WIFI_ON_TYPE;
+import static com.example.email.serviceindicator.MainActivity.audioStreamType;
 import static com.example.email.serviceindicator.MainActivity.logEntryDateTimeFormat;
 import static com.example.email.serviceindicator.MainActivity.mediaPlayer;
 import static com.example.email.serviceindicator.MainActivity.mobileConnected;
+import static com.example.email.serviceindicator.MainActivity.oldVolume;
 import static com.example.email.serviceindicator.MainActivity.wifiConnected;
+
+
+class SoundInfo
+{
+    public int rawSoundID;
+    public int soundRadioButtonID;
+    public SoundInfo(int rawSoundID, int soundRadioButtonID)
+    {
+        this.rawSoundID = rawSoundID;
+        this.soundRadioButtonID = soundRadioButtonID;
+    }
+}
+
 
 class LogEntry
 {
@@ -91,13 +111,16 @@ public class MainActivity extends AppCompatActivity {
     public static final String logEntryDateTimeFormat = "yyyy-MM-dd HH:mm:ss";
 
     static final HashMap<String, Integer> soundTypeTable = new HashMap<>();
-    static final HashMap<Integer, Integer> soundIdToButtonId = new HashMap<>();
 
     public static ArrayList<LogEntry> logArray = new ArrayList<>();
     ArrayAdapter<LogEntry> arrayAdapter;
 
-    public static HashMap<String, Integer> soundsDict;
+    public static HashMap<String, SoundInfo> soundsDict;
     public static String currentSoundTypeTab = "Mobile On";
+
+    public static final int audioStreamType = AudioManager.STREAM_MUSIC;
+    public static int oldVolume;
+    public boolean appIsOn;
 
     public static MainActivity MA;
     private SlidingUpPanelLayout mLayout;
@@ -107,6 +130,8 @@ public class MainActivity extends AppCompatActivity {
     public SharedPreferences sharedPref;
     public static boolean is12HourFormat;
     public static boolean isMMDDFormat;
+
+    public boolean editSoundsButtonPressed = false;
 
     public static String mobileName = "unknown";
     public static String wifiName = "unknown";
@@ -120,6 +145,8 @@ public class MainActivity extends AppCompatActivity {
     public static AudioManager mAudioManager;
     public static MediaPlayer mediaPlayer = new MediaPlayer();
     private LogEntrySQL logEntryDB;
+    public RadioGroup soundsRadioGroup;
+    public LinearLayout labelLayout;
 
     public static MainActivity getInstance()
     {
@@ -169,6 +196,18 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public void populateRadioGroupSounds()
+    {
+        for (String buttonName : soundsDict.keySet())
+        {
+            RadioButton newRadioButton = new RadioButton(this);
+            newRadioButton.setId(soundsDict.get(buttonName).soundRadioButtonID);
+            newRadioButton.setText(buttonName);
+            soundsRadioGroup.addView(newRadioButton);
+        }
+
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -177,16 +216,21 @@ public class MainActivity extends AppCompatActivity {
         filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
         receiver = new NetworkReceiver();
         MA = this;
+        soundsRadioGroup = new RadioGroup(this);
 
         mAudioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
 
         sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        CheckBox appOnCheckbox = (CheckBox) findViewById(R.id.checkBox);
-        appOnCheckbox.setChecked(sharedPref.getBoolean(getResources().getString(R.string.AppOnPref), true));
+//        CheckBox appOnCheckbox = (CheckBox) findViewById(R.id.checkBox);
+        ImageButton appOnButton = (ImageButton) findViewById(R.id.appOnButton);
+
+        appIsOn = sharedPref.getBoolean(getResources().getString(R.string.AppOnPref), true);
+        int appOnImageId = appIsOn ? R.drawable.connected_logo : R.drawable.disconnected_logo;
+        appOnButton.setImageResource(appOnImageId);
         SeekBar volumeSlider = (SeekBar) findViewById(R.id.volumeBar);
         volumeSlider.setProgress(sharedPref.getInt(getResources().getString(R.string.VolumePref), 70));
         ((TextView)findViewById(R.id.volumeLabel)).setText("Volume: " + volumeSlider.getProgress() + "%");
-        mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, volumeSlider.getProgress(), AudioManager.FLAG_VIBRATE);
+        mAudioManager.setStreamVolume(audioStreamType, volumeSlider.getProgress(), AudioManager.FLAG_VIBRATE);
         is12HourFormat = sharedPref.getBoolean(getResources().getString(R.string.IsTwelveHourBoolean), true);
         isMMDDFormat = sharedPref.getBoolean(getResources().getString(R.string.ISMMDDFormatBoolean), true);
 
@@ -194,6 +238,8 @@ public class MainActivity extends AppCompatActivity {
         logArray = logEntryDB.getLogs(sharedPref.getInt(getResources().getString(R.string.SaveLogsValue), 10));
 
         populateSoundsDict();
+        populateRadioGroupSounds();
+        InitializeSoundSelectionLabel();
 
         // perform seek bar change listener event used for getting the progress value
         volumeSlider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -203,7 +249,7 @@ public class MainActivity extends AppCompatActivity {
                 progressChangedValue = progress;
                 sharedPref.edit().putInt(getResources().getString(R.string.VolumePref), progress).apply();
                 ((TextView)findViewById(R.id.volumeLabel)).setText("Volume: " + progress + "%");
-                mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, progress, AudioManager.FLAG_VIBRATE);
+                mAudioManager.setStreamVolume(audioStreamType, progress, AudioManager.FLAG_VIBRATE);
             }
 
             @Override
@@ -254,23 +300,23 @@ public class MainActivity extends AppCompatActivity {
                 mLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
             }
         });
-        TabLayout soundTypeTabLayout = (TabLayout) findViewById(R.id.ChooseSoundTabLayout);
-        soundTypeTabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
-            @Override
-            public void onTabSelected(TabLayout.Tab tab) {
-                setCurrentTab(tab.getPosition());
-            }
-
-            @Override
-            public void onTabUnselected(TabLayout.Tab tab) {
-
-            }
-
-            @Override
-            public void onTabReselected(TabLayout.Tab tab) {
-
-            }
-        });
+//        TabLayout soundTypeTabLayout = (TabLayout) findViewById(R.id.ChooseSoundTabLayout);
+//        soundTypeTabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+//            @Override
+//            public void onTabSelected(TabLayout.Tab tab) {
+//                setCurrentTab(tab.getPosition());
+//            }
+//
+//            @Override
+//            public void onTabUnselected(TabLayout.Tab tab) {
+//
+//            }
+//
+//            @Override
+//            public void onTabReselected(TabLayout.Tab tab) {
+//
+//            }
+//        });
 
         this.getApplicationContext().registerReceiver(receiver, filter);
     }
@@ -331,11 +377,100 @@ public class MainActivity extends AppCompatActivity {
     public void AppOn(View view)
     {
         // Unregisters BroadcastReceiver when app is destroyed.
-        logEntryDB.getLogs(10);
-        boolean isOn = ((CheckBox)view).isChecked();
+
+        // ????
+//        logEntryDB.getLogs(10);
+
+
+        appIsOn = !appIsOn;
+        int appOnImageId = appIsOn ? R.drawable.connected_logo : R.drawable.disconnected_logo;
+        ((ImageButton)findViewById(R.id.appOnButton)).setImageResource(appOnImageId);
         SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
-        sharedPref.edit().putBoolean("AppOn", isOn).apply();
-        toggleService(isOn);
+        sharedPref.edit().putBoolean(getResources().getString(R.string.AppOnPref), appIsOn).apply();
+        toggleService(appIsOn);
+    }
+
+    public void SetSoundsButtonClicked(View view)
+    {
+
+        if (editSoundsButtonPressed)
+        {
+            ((ImageButton)view).setImageResource(R.drawable.set_alert_sounds);
+            editSoundsButtonPressed = false;
+            findViewById(R.id.mobileButtonsLayout).setVisibility(View.INVISIBLE);
+            findViewById(R.id.wifiButtonsLayout).setVisibility(View.INVISIBLE);
+            LinearLayout editSoundsLayout = (LinearLayout)findViewById(R.id.editSoundButtonsLayout);
+            editSoundsLayout.removeView(soundsRadioGroup);
+            editSoundsLayout.removeView(labelLayout);
+        }
+        else
+        {
+            ((ImageButton)view).setImageResource(R.drawable.set_alert_sounds_pressed);
+            findViewById(R.id.mobileButtonsLayout).setVisibility(View.VISIBLE);
+            findViewById(R.id.wifiButtonsLayout).setVisibility(View.VISIBLE);
+            editSoundsButtonPressed = true;
+        }
+    }
+
+    public void SoundSelectionMade(View view)
+    {
+        LinearLayout editSoundsLayout = (LinearLayout)findViewById(R.id.editSoundButtonsLayout);
+        editSoundsLayout.addView(soundsRadioGroup, 0);
+        editSoundsLayout.addView(labelLayout, 0);
+        findViewById(R.id.mobileButtonsLayout).setVisibility(View.INVISIBLE);
+        findViewById(R.id.wifiButtonsLayout).setVisibility(View.INVISIBLE);
+
+        switch (view.getId())
+        {
+            case R.id.mobile_on_button:
+                ((TextView)labelLayout.getChildAt(1)).setText("mobile on");
+                break;
+            case R.id.mobile_off_button:
+                ((TextView)labelLayout.getChildAt(1)).setText("mobile off");
+                break;
+            case R.id.wifi_on_button:
+                ((TextView)labelLayout.getChildAt(1)).setText("wifi on");
+                break;
+            case R.id.wifi_off_button:
+                ((TextView)labelLayout.getChildAt(1)).setText("wifi off");
+                break;
+        }
+    }
+
+
+    public void InitializeSoundSelectionLabel()
+    {
+        labelLayout = new LinearLayout(this);
+        labelLayout.setOrientation(LinearLayout.HORIZONTAL);
+
+        findViewById(R.id.mobileButtonsLayout).setVisibility(View.INVISIBLE);
+        findViewById(R.id.wifiButtonsLayout).setVisibility(View.INVISIBLE);
+        Typeface ubuntuLight = Typeface.createFromAsset(getAssets(), "fonts/Ubuntu-L.ttf");
+        Typeface ubuntuMedium = Typeface.createFromAsset(getAssets(), "fonts/Ubuntu-M.ttf");
+
+        TextView editSoundLabel1 = new TextView(this);
+        editSoundLabel1.setTextColor(ContextCompat.getColor(this, R.color.blueText));
+        editSoundLabel1.setTextSize(18);
+        editSoundLabel1.setText("Select a ");
+        editSoundLabel1.setPadding(20, 10, 0, 10);
+        editSoundLabel1.setTypeface(ubuntuLight);
+
+        TextView editSoundLabel2 = new TextView(this);
+        editSoundLabel2.setTextColor(ContextCompat.getColor(this, R.color.blueText));
+        editSoundLabel2.setTextSize(18);
+        editSoundLabel2.setPadding(0, 10, 0, 10);
+        editSoundLabel2.setTypeface(ubuntuMedium);
+
+        TextView editSoundLabel3 = new TextView(this);
+        editSoundLabel3.setTextColor(ContextCompat.getColor(this, R.color.blueText));
+        editSoundLabel3.setTextSize(18);
+        editSoundLabel3.setText(" sound:");
+        editSoundLabel3.setPadding(0, 10, 0, 10);
+        editSoundLabel3.setTypeface(ubuntuLight);
+
+        labelLayout.addView(editSoundLabel1);
+        labelLayout.addView(editSoundLabel2);
+        labelLayout.addView(editSoundLabel3);
     }
 
     public void populateSoundsDict()
@@ -346,31 +481,17 @@ public class MainActivity extends AppCompatActivity {
         soundTypeTable.put(WIFI_OFF_TYPE, sharedPref.getInt(WIFI_OFF_TYPE, R.raw.off_wifi));
 
         soundsDict = new HashMap<>();
-        soundsDict.put(getResources().getString(R.string.MobileOnSound), R.raw.on_mobile);
-        soundsDict.put(getResources().getString(R.string.MobileOffSound), R.raw.off_mobile);
-        soundsDict.put(getResources().getString(R.string.WifiOnSound), R.raw.on_wifi);
-        soundsDict.put(getResources().getString(R.string.WifiOffSound), R.raw.off_wifi);
-        soundsDict.put(getResources().getString(R.string.BirdChirpsUp), R.raw.bird_chirps_up);
-        soundsDict.put(getResources().getString(R.string.BirdChirpsDown), R.raw.bird_chirps_down);
-        soundsDict.put(getResources().getString(R.string.HighBlip), R.raw.high_blip);
-        soundsDict.put(getResources().getString(R.string.LowBlip), R.raw.low_blip);
-        soundsDict.put(getResources().getString(R.string.DoubleHighBlip), R.raw.double_high_blip);
-        soundsDict.put(getResources().getString(R.string.DoubleLowBlip), R.raw.double_low_blip);
 
-        soundIdToButtonId.put(R.raw.on_mobile, R.id.SOUNDMobileOnButton);
-        soundIdToButtonId.put(R.raw.off_mobile, R.id.SOUNDMobileOffButton);
-        soundIdToButtonId.put(R.raw.on_wifi, R.id.SOUNDWifiOnButton);
-        soundIdToButtonId.put(R.raw.off_wifi, R.id.SOUNDWifiOffButton);
-        soundIdToButtonId.put(R.raw.bird_chirps_up, R.id.SOUNDBirdChirpsUp);
-        soundIdToButtonId.put(R.raw.bird_chirps_down, R.id.SOUNDBirdChirpsDown);
-        soundIdToButtonId.put(R.raw.high_blip, R.id.SOUNDHighBlip);
-        soundIdToButtonId.put(R.raw.low_blip, R.id.SOUNDLowBlip);
-        soundIdToButtonId.put(R.raw.double_high_blip, R.id.SOUNDDoubleHighBlip);
-        soundIdToButtonId.put(R.raw.double_low_blip, R.id.SOUNDDoubleLowBlip);
-
-        TabLayout soundsTabLayout = (TabLayout) findViewById(R.id.ChooseSoundTabLayout);
-        setCurrentTab(soundsTabLayout.getSelectedTabPosition());
-
+        soundsDict.put(getResources().getString(R.string.MobileOnSound), new SoundInfo(R.raw.on_mobile, R.id.SOUNDMobileOnButton));
+        soundsDict.put(getResources().getString(R.string.MobileOffSound), new SoundInfo(R.raw.off_mobile, R.id.SOUNDMobileOffButton));
+        soundsDict.put(getResources().getString(R.string.WifiOnSound), new SoundInfo(R.raw.on_wifi, R.id.SOUNDWifiOnButton));
+        soundsDict.put(getResources().getString(R.string.WifiOffSound), new SoundInfo(R.raw.off_wifi, R.id.SOUNDWifiOffButton));
+        soundsDict.put(getResources().getString(R.string.BirdChirpsUp), new SoundInfo(R.raw.bird_chirps_up, R.id.SOUNDBirdChirpsUp));
+        soundsDict.put(getResources().getString(R.string.BirdChirpsDown), new SoundInfo(R.raw.bird_chirps_down, R.id.SOUNDBirdChirpsDown));
+        soundsDict.put(getResources().getString(R.string.HighBlip), new SoundInfo(R.raw.high_blip, R.id.SOUNDHighBlip));
+        soundsDict.put(getResources().getString(R.string.LowBlip), new SoundInfo(R.raw.low_blip, R.id.SOUNDLowBlip));
+        soundsDict.put(getResources().getString(R.string.DoubleHighBlip), new SoundInfo(R.raw.double_high_blip, R.id.SOUNDDoubleHighBlip));
+        soundsDict.put(getResources().getString(R.string.DoubleLowBlip), new SoundInfo(R.raw.double_low_blip, R.id.SOUNDDoubleLowBlip));
     }
 
     public void setCurrentTab(int index)
@@ -395,14 +516,14 @@ public class MainActivity extends AppCompatActivity {
                 defaultSound = R.raw.off_wifi;
                 break;
         }
-        RadioGroup soundsGroup = (RadioGroup) findViewById(R.id.soundSelectionGroup);
-        soundsGroup.check(soundIdToButtonId.get(sharedPref.getInt(currentSoundTypeTab, defaultSound)));
+//        RadioGroup soundsGroup = (RadioGroup) findViewById(R.id.soundSelectionGroup);
+//        soundsGroup.check(soundIdToButtonId.get(sharedPref.getInt(currentSoundTypeTab, defaultSound)));
     }
 
     public void SoundSelected(View view)
     {
         String selectedText = ((RadioButton)view).getText().toString();
-        int selectedSoundId = soundsDict.get(selectedText);
+        int selectedSoundId = soundsDict.get(selectedText).rawSoundID;
         if (sharedPref.getBoolean(getResources().getString(R.string.PreviewSoundBoolean), true))
         {
             if (mediaPlayer != null && mediaPlayer.isPlaying())
@@ -439,8 +560,8 @@ public class MainActivity extends AppCompatActivity {
 }
 
 
-class NetworkReceiver extends BroadcastReceiver {
-
+class NetworkReceiver extends BroadcastReceiver
+{
     @Override
     public void onReceive(Context context, Intent intent) {
         ConnectivityManager conn = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -449,25 +570,34 @@ class NetworkReceiver extends BroadcastReceiver {
         boolean wifi = conn.getNetworkInfo(ConnectivityManager.TYPE_WIFI).isConnected();
         boolean mobile = conn.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).isConnected();
 
+
         if(networkInfo != null)
         {
 
-            int oldVolume = MainActivity.mAudioManager.getStreamVolume(AudioManager.STREAM_NOTIFICATION);
-            int volume = MainActivity.getInstance().sharedPref.getInt("VolumePref", 70);
-            MainActivity.mAudioManager.setStreamVolume(AudioManager.STREAM_NOTIFICATION, volume, AudioManager.FLAG_VIBRATE);
-            boolean volumeFixed = MainActivity.mAudioManager.isVolumeFixed();
             if (networkInfo.getType() == ConnectivityManager.TYPE_WIFI && !wifiConnected)
             {
-                Toast.makeText(context, "WIFI Connected", Toast.LENGTH_SHORT).show();
+                oldVolume = MainActivity.mAudioManager.getStreamVolume(audioStreamType);
+                int volume = MainActivity.getInstance().sharedPref.getInt("VolumePref", 70);
+                MainActivity.mAudioManager.setStreamVolume(audioStreamType, volume, AudioManager.FLAG_VIBRATE);
+
+                if (MainActivity.getInstance().sharedPref.getBoolean("EnableToastBoolean", true))
+                    Toast.makeText(context, "WIFI Connected", Toast.LENGTH_SHORT).show();
                 wifiConnected = true;
 
                 int currentSoundId = MainActivity.getInstance().sharedPref.getInt(WIFI_ON_TYPE, R.raw.on_wifi);
                 if (mediaPlayer != null && mediaPlayer.isPlaying())
                 {
                     mediaPlayer.release();
-                    mediaPlayer = null;
                 }
                 mediaPlayer = MediaPlayer.create(context.getApplicationContext(), currentSoundId);
+                mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                    @Override
+                    public void onCompletion(MediaPlayer mp) {
+                        MainActivity.mAudioManager.setStreamVolume(audioStreamType, oldVolume, AudioManager.FLAG_VIBRATE);
+                        mediaPlayer.release();
+                        mediaPlayer = null;
+                    }
+                });
                 mediaPlayer.start();
                 MainActivity.getInstance().setWifiName(networkInfo.getExtraInfo());
 
@@ -477,17 +607,30 @@ class NetworkReceiver extends BroadcastReceiver {
                 MainActivity.getInstance().addLog(logDatetime, connInfo);
 
             }
-            if (networkInfo.getType() == ConnectivityManager.TYPE_MOBILE && !mobileConnected) {
+            if (networkInfo.getType() == ConnectivityManager.TYPE_MOBILE && !mobileConnected)
+            {
+                oldVolume = MainActivity.mAudioManager.getStreamVolume(audioStreamType);
+                int volume = MainActivity.getInstance().sharedPref.getInt("VolumePref", 70);
+                MainActivity.mAudioManager.setStreamVolume(audioStreamType, volume, AudioManager.FLAG_VIBRATE);
+
                 mobileConnected = true;
-                Toast.makeText(context, "Mobile Connected", Toast.LENGTH_SHORT).show();
+                if (MainActivity.getInstance().sharedPref.getBoolean("EnableToastBoolean", true))
+                    Toast.makeText(context, "Mobile Connected", Toast.LENGTH_SHORT).show();
 
                 int currentSoundId = MainActivity.getInstance().sharedPref.getInt(MOBILE_ON_TYPE, R.raw.on_mobile);
                 if (mediaPlayer != null && mediaPlayer.isPlaying())
                 {
                     mediaPlayer.release();
-                    mediaPlayer = null;
                 }
                 mediaPlayer = MediaPlayer.create(context.getApplicationContext(), currentSoundId);
+                mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                    @Override
+                    public void onCompletion(MediaPlayer mp) {
+                        MainActivity.mAudioManager.setStreamVolume(audioStreamType, oldVolume, AudioManager.FLAG_VIBRATE);
+                        mediaPlayer.release();
+                        mediaPlayer = null;
+                    }
+                });
                 mediaPlayer.start();
                 MainActivity.getInstance().setMobileName(networkInfo.getExtraInfo());
 
@@ -501,16 +644,28 @@ class NetworkReceiver extends BroadcastReceiver {
         {
             if (!wifi && wifiConnected)
             {
-                Toast.makeText(context, "WIFI Disconnected", Toast.LENGTH_SHORT).show();
+                oldVolume = MainActivity.mAudioManager.getStreamVolume(audioStreamType);
+                int volume = MainActivity.getInstance().sharedPref.getInt("VolumePref", 70);
+                MainActivity.mAudioManager.setStreamVolume(audioStreamType, volume, AudioManager.FLAG_VIBRATE);
+
+                if (MainActivity.getInstance().sharedPref.getBoolean("EnableToastBoolean", true))
+                    Toast.makeText(context, "WIFI Disconnected", Toast.LENGTH_SHORT).show();
                 wifiConnected = false;
 
                 int currentSoundId = MainActivity.getInstance().sharedPref.getInt(WIFI_OFF_TYPE, R.raw.off_wifi);
                 if (mediaPlayer != null && mediaPlayer.isPlaying())
                 {
                     mediaPlayer.release();
-                    mediaPlayer = null;
                 }
                 mediaPlayer = MediaPlayer.create(context.getApplicationContext(), currentSoundId);
+                mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                    @Override
+                    public void onCompletion(MediaPlayer mp) {
+                        MainActivity.mAudioManager.setStreamVolume(audioStreamType, oldVolume, AudioManager.FLAG_VIBRATE);
+                        mediaPlayer.release();
+                        mediaPlayer = null;
+                    }
+                });
                 mediaPlayer.start();
 
                 DateFormat datetimeFormat = new SimpleDateFormat(logEntryDateTimeFormat);
@@ -520,16 +675,28 @@ class NetworkReceiver extends BroadcastReceiver {
             }
             else if(!mobile && mobileConnected)
             {
-                Toast.makeText(context, "Mobile Disconnected", Toast.LENGTH_SHORT).show();
+                oldVolume = MainActivity.mAudioManager.getStreamVolume(audioStreamType);
+                int volume = MainActivity.getInstance().sharedPref.getInt("VolumePref", 70);
+                MainActivity.mAudioManager.setStreamVolume(audioStreamType, volume, AudioManager.FLAG_VIBRATE);
+
+                if (MainActivity.getInstance().sharedPref.getBoolean("EnableToastBoolean", true))
+                    Toast.makeText(context, "Mobile Disconnected", Toast.LENGTH_SHORT).show();
                 mobileConnected = false;
 
                 int currentSoundId = MainActivity.getInstance().sharedPref.getInt(MOBILE_OFF_TYPE, R.raw.off_mobile);
                 if (mediaPlayer != null && mediaPlayer.isPlaying())
                 {
                     mediaPlayer.release();
-                    mediaPlayer = null;
                 }
                 mediaPlayer = MediaPlayer.create(context.getApplicationContext(), currentSoundId);
+                mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                    @Override
+                    public void onCompletion(MediaPlayer mp) {
+                        MainActivity.mAudioManager.setStreamVolume(audioStreamType, oldVolume, AudioManager.FLAG_VIBRATE);
+                        mediaPlayer.release();
+                        mediaPlayer = null;
+                    }
+                });
                 mediaPlayer.start();
 
                 DateFormat datetimeFormat = new SimpleDateFormat(logEntryDateTimeFormat);
@@ -538,6 +705,7 @@ class NetworkReceiver extends BroadcastReceiver {
                 MainActivity.getInstance().addLog(logDatetime, connInfo);
             }
         }
-
     }
 }
+
+

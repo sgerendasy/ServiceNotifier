@@ -1,7 +1,5 @@
 <resources>
     <string name="app_name">ServiceIndicator</string>
-    <string name="appwidget_text">EXAMPLE</string>
-    <string name="add_widget">Add widget</string>
     <string name="SI">Service Indicator</string>
     <string name="turn_on">0</string>
     <string name="turn_off">X</string>
@@ -24,7 +22,8 @@
     <string name="IsTwelveHourBoolean">is12hour</string>
     <string name="ISMMDDFormatBoolean">isMMDD</string>
     <string name="SaveLogsValue">SaveLogs</string>
-    <string name="PreviewSoundBoolean">PreviewSoundBoolean</string>
+    <string name="PreviewSoundBoolean">PreviewSoundBoolean</string> // change to const
+    <string name="EnableToastBoolean">EnableToastBoolean</string> // change to const
 
     // names of sound files
     <string name="MobileOnSound">Guitar On</string>
@@ -46,5 +45,7 @@
     <string name="WifiOffType">WifiOffType</string>
     <string name="other_settings">Other Settings</string>
     <string name="preview_alert_sound">Preview Alert Sound</string>
+    <string name="enable_toast_notifications">Enable Toast Notifications</string>
+    <string name="editsoundbutton">editSoundButton</string>
 
 </resources>
