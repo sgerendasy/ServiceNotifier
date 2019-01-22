@@ -16,6 +16,7 @@ import android.support.design.widget.TabLayout;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -137,6 +138,7 @@ public class MainActivity extends AppCompatActivity {
 
     public static String mobileName = "unknown";
     public static String wifiName = "unknown";
+    public int newSoundIdTemp = -1;
 
     public static final String MOBILE_ON_TYPE = "Mobile On";
     public static final String MOBILE_OFF_TYPE = "Mobile Off";
@@ -220,7 +222,8 @@ public class MainActivity extends AppCompatActivity {
                 mediaPlayer = MediaPlayer.create(getApplicationContext(), selectedSoundId);
                 mediaPlayer.start();
             }
-            sharedPref.edit().putInt(SelectedSoundType, selectedSoundId).apply();
+            newSoundIdTemp = selectedSoundId;
+
         }
     };
 
@@ -242,37 +245,55 @@ public class MainActivity extends AppCompatActivity {
                 mediaPlayer = MediaPlayer.create(getApplicationContext(), selectedSoundId);
                 mediaPlayer.start();
             }
-            sharedPref.edit().putInt(SelectedSoundType, selectedSoundId).apply();
+            newSoundIdTemp = selectedSoundId;
         }
     };
 
     public void InitializeSoundConfirmationLayout()
     {
         confirmationLayout = new LinearLayout(this);
-        LinearLayout.LayoutParams confirmationParams = new RadioGroup.LayoutParams(RadioGroup.LayoutParams.WRAP_CONTENT, RadioGroup.LayoutParams.WRAP_CONTENT);
+        LinearLayout.LayoutParams confirmationParams = new RadioGroup.LayoutParams(RadioGroup.LayoutParams.WRAP_CONTENT, RadioGroup.LayoutParams.MATCH_PARENT);
+        confirmationParams.gravity = Gravity.CENTER_HORIZONTAL;
         confirmationLayout.setLayoutParams(confirmationParams);
         confirmationLayout.requestLayout();
         confirmationLayout.setOrientation(LinearLayout.HORIZONTAL);
 
+        LinearLayout.LayoutParams buttonParams = new RadioGroup.LayoutParams(RadioGroup.LayoutParams.WRAP_CONTENT, RadioGroup.LayoutParams.WRAP_CONTENT);
+        buttonParams.setMargins(10, 50, 10, 0);
+        Typeface ubuntuLight = Typeface.createFromAsset(getAssets(), "fonts/Ubuntu-L.ttf");
+
         Button cancelButton = new Button(this);
         cancelButton.setText("Cancel");
-        cancelButton.setWidth(100);
-        cancelButton.setHeight(40);
+        cancelButton.setBackgroundColor(ContextCompat.getColor(this, R.color.greyBackground));
+        cancelButton.setMinimumWidth((getResources().getDisplayMetrics().widthPixels / 2) - 60);
+        cancelButton.setLayoutParams(buttonParams);
+        cancelButton.setTypeface(ubuntuLight);
+        cancelButton.setTextColor(ContextCompat.getColor(this, R.color.cardview_light_background));
+        cancelButton.setHeight(50);
+        cancelButton.setTextSize(20);
         cancelButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                leftRadioGroupColumn.check(2);
+            public void onClick(View v)
+            {
+                ToggleSoundSelection(false);
             }
         });
 
         Button saveButton = new Button(this);
         saveButton.setText("Save");
-        saveButton.setWidth(100);
-        saveButton.setHeight(40);
+        saveButton.setBackgroundColor(ContextCompat.getColor(this, R.color.blueText));
+        saveButton.setMinimumWidth((getResources().getDisplayMetrics().widthPixels / 2) - 60);
+        saveButton.setLayoutParams(buttonParams);
+        saveButton.setTypeface(ubuntuLight);
+        saveButton.setTextColor(ContextCompat.getColor(this, R.color.cardview_light_background));
+        saveButton.setHeight(50);
+        saveButton.setTextSize(20);
         saveButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                rightRadioGroupColumn.check(5);
+            public void onClick(View v)
+            {
+                ToggleSoundSelection(false);
+                sharedPref.edit().putInt(SelectedSoundType, newSoundIdTemp).apply();
             }
         });
 
@@ -483,7 +504,6 @@ public class MainActivity extends AppCompatActivity {
 
     public void SetSoundsButtonClicked(View view)
     {
-
         if (editSoundsButtonPressed)
         {
             // toggle "edit sound" view off
@@ -492,7 +512,7 @@ public class MainActivity extends AppCompatActivity {
             findViewById(R.id.mobileButtonsLayout).setVisibility(View.INVISIBLE);
             findViewById(R.id.wifiButtonsLayout).setVisibility(View.INVISIBLE);
             LinearLayout editSoundsLayout = (LinearLayout)findViewById(R.id.editSoundButtonsLayout);
-            
+
             editSoundsLayout.removeView(setSoundsLayout);
             editSoundsLayout.removeView(labelLayout);
             editSoundsLayout.removeView(confirmationLayout);
@@ -507,14 +527,30 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void SoundSelectionMade(View view)
+    public void ToggleSoundSelection(boolean selectSoundType)
     {
         LinearLayout editSoundsLayout = (LinearLayout)findViewById(R.id.editSoundButtonsLayout);
-        editSoundsLayout.addView(confirmationLayout,0);
-        editSoundsLayout.addView(setSoundsLayout, 0);
-        editSoundsLayout.addView(labelLayout, 0);
-        findViewById(R.id.mobileButtonsLayout).setVisibility(View.INVISIBLE);
-        findViewById(R.id.wifiButtonsLayout).setVisibility(View.INVISIBLE);
+        if(selectSoundType)
+        {
+            editSoundsLayout.addView(confirmationLayout,0);
+            editSoundsLayout.addView(setSoundsLayout, 0);
+            editSoundsLayout.addView(labelLayout, 0);
+            findViewById(R.id.mobileButtonsLayout).setVisibility(View.INVISIBLE);
+            findViewById(R.id.wifiButtonsLayout).setVisibility(View.INVISIBLE);
+        }
+        else
+        {
+            editSoundsLayout.removeView(confirmationLayout);
+            editSoundsLayout.removeView(setSoundsLayout);
+            editSoundsLayout.removeView(labelLayout);
+            findViewById(R.id.mobileButtonsLayout).setVisibility(View.VISIBLE);
+            findViewById(R.id.wifiButtonsLayout).setVisibility(View.VISIBLE);
+        }
+    }
+
+    public void SoundSelectionMade(View view)
+    {
+        ToggleSoundSelection(true);
 
         int defaultSoundId = 0;
         switch (view.getId())
@@ -541,6 +577,7 @@ public class MainActivity extends AppCompatActivity {
                 break;
         }
         int selectedSoundId = sharedPref.getInt(SelectedSoundType, defaultSoundId);
+        newSoundIdTemp = selectedSoundId;
         int radioButtonIndex = getSoundInfo(selectedSoundId).radioButtonIndex;
         if (radioButtonIndex >= soundsArray.size() / 2)
         {
