@@ -261,7 +261,7 @@ public class MainActivity extends AppCompatActivity {
         cancelButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                leftRadioGroupColumn.check(2);
             }
         });
 
@@ -272,7 +272,7 @@ public class MainActivity extends AppCompatActivity {
         saveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                rightRadioGroupColumn.check(5);
             }
         });
 
@@ -492,6 +492,7 @@ public class MainActivity extends AppCompatActivity {
             findViewById(R.id.mobileButtonsLayout).setVisibility(View.INVISIBLE);
             findViewById(R.id.wifiButtonsLayout).setVisibility(View.INVISIBLE);
             LinearLayout editSoundsLayout = (LinearLayout)findViewById(R.id.editSoundButtonsLayout);
+            
             editSoundsLayout.removeView(setSoundsLayout);
             editSoundsLayout.removeView(labelLayout);
             editSoundsLayout.removeView(confirmationLayout);
@@ -514,7 +515,6 @@ public class MainActivity extends AppCompatActivity {
         editSoundsLayout.addView(labelLayout, 0);
         findViewById(R.id.mobileButtonsLayout).setVisibility(View.INVISIBLE);
         findViewById(R.id.wifiButtonsLayout).setVisibility(View.INVISIBLE);
-
 
         int defaultSoundId = 0;
         switch (view.getId())
@@ -544,11 +544,16 @@ public class MainActivity extends AppCompatActivity {
         int radioButtonIndex = getSoundInfo(selectedSoundId).radioButtonIndex;
         if (radioButtonIndex >= soundsArray.size() / 2)
         {
-            rightRadioGroupColumn.check(radioButtonIndex % soundsArray.size() / 2);
+            sharedPref.edit().putBoolean(getResources().getString(R.string.PreviewSoundBoolean), false).apply();
+            rightRadioGroupColumn.check(radioButtonIndex);
+            sharedPref.edit().putBoolean(getResources().getString(R.string.PreviewSoundBoolean), true).apply();
+
         }
         else
         {
+            sharedPref.edit().putBoolean(getResources().getString(R.string.PreviewSoundBoolean), false).apply();
             leftRadioGroupColumn.check(radioButtonIndex);
+            sharedPref.edit().putBoolean(getResources().getString(R.string.PreviewSoundBoolean), true).apply();
         }
     }
 
