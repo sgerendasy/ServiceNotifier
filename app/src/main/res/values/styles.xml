@@ -38,6 +38,7 @@
     <style name="AppWidgetButton" parent="Base.Widget.AppCompat.Button">
         <item name="android:layout_marginTop">4dp</item>
     </style>
+
     <string name="widget_id_label">Widget ID</string>
 
     <!-- Heading for the updated panel. -->
@@ -49,5 +50,14 @@
 
     <!-- Format string for the date & count text view -->
     <string name="date_count_format">%1$d @%2$s</string>
+
+    <style name="AppTheme.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
 </resources>

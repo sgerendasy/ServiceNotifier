@@ -12,6 +12,8 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.constraint.ConstraintLayout;
+import android.support.constraint.ConstraintSet;
 import android.support.design.widget.TabLayout;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -154,6 +156,7 @@ public class MainActivity extends AppCompatActivity {
     public static RadioGroup rightRadioGroupColumn;
     public LinearLayout labelLayout;
     public LinearLayout confirmationLayout;
+    public LinearLayout soundsTemp;
 
     public static MainActivity getInstance()
     {
@@ -254,6 +257,7 @@ public class MainActivity extends AppCompatActivity {
         confirmationLayout = new LinearLayout(this);
         LinearLayout.LayoutParams confirmationParams = new RadioGroup.LayoutParams(RadioGroup.LayoutParams.WRAP_CONTENT, RadioGroup.LayoutParams.MATCH_PARENT);
         confirmationParams.gravity = Gravity.CENTER_HORIZONTAL;
+
         confirmationLayout.setLayoutParams(confirmationParams);
         confirmationLayout.requestLayout();
         confirmationLayout.setOrientation(LinearLayout.HORIZONTAL);
@@ -299,6 +303,21 @@ public class MainActivity extends AppCompatActivity {
 
         confirmationLayout.addView(cancelButton);
         confirmationLayout.addView(saveButton);
+
+    }
+
+    public void SetLayoutConstraints()
+    {
+        soundsTemp = new LinearLayout(this);
+        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        layoutParams.gravity = Gravity.CENTER_HORIZONTAL;
+        soundsTemp.setLayoutParams(layoutParams);
+        soundsTemp.requestLayout();
+
+        soundsTemp.setOrientation(LinearLayout.VERTICAL);
+        soundsTemp.addView(labelLayout);
+        soundsTemp.addView(setSoundsLayout);
+        soundsTemp.addView(confirmationLayout);
     }
 
     public void populateRadioGroupLayout()
@@ -369,6 +388,7 @@ public class MainActivity extends AppCompatActivity {
         populateRadioGroupLayout();
         InitializeSoundSelectionLabel();
         InitializeSoundConfirmationLayout();
+        SetLayoutConstraints();
 
         // perform seek bar change listener event used for getting the progress value
         volumeSlider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -393,9 +413,9 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
-        ListView lv = (ListView) findViewById(R.id.list);
+        ListView logListView = (ListView) findViewById(R.id.logList);
 
-        lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        logListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 // handle on log item clicked
@@ -407,10 +427,10 @@ public class MainActivity extends AppCompatActivity {
                 this,
                 android.R.layout.simple_list_item_1,
                 logArray );
-        lv.setAdapter(arrayAdapter);
+        logListView.setAdapter(arrayAdapter);
 
         mLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
-        mLayout.setPanelHeight(100);
+        mLayout.setPanelHeight(80);
 
         mLayout.addPanelSlideListener(new SlidingUpPanelLayout.PanelSlideListener() {
             @Override
@@ -450,6 +470,11 @@ public class MainActivity extends AppCompatActivity {
         if (item.getTitle().toString().equals(getResources().getString(R.string.SettingsLabel)))
         {
             Intent settingsIntent = new Intent(this, Settings.class);
+            startActivity(settingsIntent);
+        }
+        if (item.getTitle().toString().equals(getResources().getString(R.string.AboutLabel)))
+        {
+            Intent settingsIntent = new Intent(this, About.class);
             startActivity(settingsIntent);
         }
         return super.onOptionsItemSelected(item);
@@ -511,11 +536,12 @@ public class MainActivity extends AppCompatActivity {
             editSoundsButtonPressed = false;
             findViewById(R.id.mobileButtonsLayout).setVisibility(View.INVISIBLE);
             findViewById(R.id.wifiButtonsLayout).setVisibility(View.INVISIBLE);
-            LinearLayout editSoundsLayout = (LinearLayout)findViewById(R.id.editSoundButtonsLayout);
+//            ConstraintLayout editSoundsLayout = (ConstraintLayout) findViewById(R.id.editSoundButtonsLayout);
+            ((LinearLayout)findViewById(R.id.editSoundsLinearLayout)).removeView(soundsTemp);
+//            editSoundsLayout.removeView(setSoundsLayout);
+//            editSoundsLayout.removeView(labelLayout);
+//            editSoundsLayout.removeView(confirmationLayout);
 
-            editSoundsLayout.removeView(setSoundsLayout);
-            editSoundsLayout.removeView(labelLayout);
-            editSoundsLayout.removeView(confirmationLayout);
         }
         else
         {
@@ -523,26 +549,26 @@ public class MainActivity extends AppCompatActivity {
             ((ImageButton)view).setImageResource(R.drawable.set_alert_sounds_pressed);
             findViewById(R.id.mobileButtonsLayout).setVisibility(View.VISIBLE);
             findViewById(R.id.wifiButtonsLayout).setVisibility(View.VISIBLE);
+
             editSoundsButtonPressed = true;
         }
     }
 
     public void ToggleSoundSelection(boolean selectSoundType)
     {
-        LinearLayout editSoundsLayout = (LinearLayout)findViewById(R.id.editSoundButtonsLayout);
+//        ConstraintLayout editSoundsLayout = (ConstraintLayout)findViewById(R.id.editSoundButtonsLayout);
+        LinearLayout editSoundsLinearLayout = (LinearLayout)findViewById(R.id.editSoundsLinearLayout);
         if(selectSoundType)
         {
-            editSoundsLayout.addView(confirmationLayout,0);
-            editSoundsLayout.addView(setSoundsLayout, 0);
-            editSoundsLayout.addView(labelLayout, 0);
+//            editSoundsLinearLayout.removeView(findViewById(R.id.editSoundButtonsLayout));
+            editSoundsLinearLayout.addView(soundsTemp, 0);
             findViewById(R.id.mobileButtonsLayout).setVisibility(View.INVISIBLE);
             findViewById(R.id.wifiButtonsLayout).setVisibility(View.INVISIBLE);
         }
         else
         {
-            editSoundsLayout.removeView(confirmationLayout);
-            editSoundsLayout.removeView(setSoundsLayout);
-            editSoundsLayout.removeView(labelLayout);
+            editSoundsLinearLayout.removeView(soundsTemp);
+//            editSoundsLinearLayout.addView(findViewById(R.id.editSoundButtonsLayout));
             findViewById(R.id.mobileButtonsLayout).setVisibility(View.VISIBLE);
             findViewById(R.id.wifiButtonsLayout).setVisibility(View.VISIBLE);
         }
@@ -682,12 +708,18 @@ public class MainActivity extends AppCompatActivity {
         {
             if (on)
             {
-                Toast.makeText(getApplicationContext(), "Service on", Toast.LENGTH_SHORT).show();
+                if (MainActivity.getInstance().sharedPref.getBoolean("EnableToastBoolean", true))
+                {
+                    Toast.makeText(getApplicationContext(), "Service on", Toast.LENGTH_SHORT).show();
+                }
                 this.getApplicationContext().registerReceiver(receiver, filter);
             }
             else
             {
-                Toast.makeText(getApplicationContext(), "Service off", Toast.LENGTH_SHORT).show();
+                if (MainActivity.getInstance().sharedPref.getBoolean("EnableToastBoolean", true))
+                {
+                    Toast.makeText(getApplicationContext(), "Service off", Toast.LENGTH_SHORT).show();
+                }
                 this.getApplicationContext().unregisterReceiver(receiver);
             }
         }

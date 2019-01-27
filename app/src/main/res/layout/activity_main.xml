@@ -11,23 +11,20 @@
     sothree:umanoParallaxOffset="100dp"
     sothree:umanoDragView="@+id/dragView"
     sothree:umanoOverlay="true"
-    sothree:umanoScrollableView="@+id/list">
+    sothree:umanoScrollableView="@+id/logList">
 
     <!-- MAIN CONTENT -->
-    <FrameLayout
+    <ScrollView
+        android:id="@+id/mainScrollView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <LinearLayout
+        <android.support.constraint.ConstraintLayout
             android:id="@+id/section_update"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-
-            android:layout_alignParentStart="true"
-            android:layout_alignParentLeft="true"
             android:layout_marginStart="0dp"
-
             android:layout_marginEnd="0dp"
             android:gravity="start"
             android:orientation="vertical">
@@ -35,109 +32,197 @@
             <ImageButton
                 android:id="@+id/appOnButton"
                 style="?android:attr/borderlessButtonStyle"
-                android:layout_marginTop="20dp"
-                android:layout_gravity="center_horizontal"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:onClick="AppOn"
-                android:src="@drawable/disconnected_logo" />
+                android:src="@drawable/disconnected_logo"
+                sothree:layout_constraintDimensionRatio="H,16:9"
+                android:maxWidth="80dp"
+                android:maxHeight="80dp"
+                sothree:layout_constraintEnd_toEndOf="parent"
+                sothree:layout_constraintStart_toStartOf="parent"
+                sothree:layout_constraintTop_toTopOf="parent" />
 
 
             <TextView
                 android:id="@+id/volumeLabel"
-                android:layout_width="111dp"
-                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:layout_height="17dp"
                 android:layout_marginStart="8dp"
                 android:layout_marginEnd="8dp"
                 android:ems="10"
+                android:text="Volume"
                 android:textSize="16sp"
-                tools:layout_editor_absoluteY="66dp" />
+                sothree:layout_constraintEnd_toEndOf="parent"
+                sothree:layout_constraintHorizontal_bias="0.18"
+                sothree:layout_constraintStart_toStartOf="parent"
+                sothree:layout_constraintTop_toBottomOf="@+id/appOnButton" />
 
             <SeekBar
                 android:id="@+id/volumeBar"
                 style="@android:style/Widget.Material.SeekBar"
-                android:layout_width="344dp"
-                android:layout_height="31dp"
+                android:layout_width="339dp"
+                android:layout_height="20dp"
                 android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
                 android:layout_marginEnd="8dp"
                 android:clickable="true"
                 android:max="100"
-                tools:layout_editor_absoluteY="117dp" />
+                sothree:layout_constraintEnd_toEndOf="parent"
+                sothree:layout_constraintStart_toStartOf="parent"
+                sothree:layout_constraintTop_toBottomOf="@+id/volumeLabel" />
 
             <Space
-                android:layout_width="match_parent"
-                android:layout_height="22dp" />
+                android:id="@+id/space"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                sothree:layout_constraintEnd_toEndOf="@id/volumeBar"
+                sothree:layout_constraintStart_toStartOf="@id/volumeBar"
+                sothree:layout_constraintTop_toTopOf="@id/volumeBar" />
 
             <ImageButton
                 android:id="@+id/editSoundTextView"
                 style="?android:attr/borderlessButtonStyle"
                 android:layout_width="match_parent"
-                android:layout_height="68dp"
+                android:layout_height="67dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
                 android:contentDescription="@string/editsoundbutton"
                 android:onClick="SetSoundsButtonClicked"
-                android:src="@drawable/set_alert_sounds" />
+                android:src="@drawable/set_alert_sounds"
+                sothree:layout_constraintEnd_toEndOf="parent"
+                sothree:layout_constraintStart_toStartOf="parent"
+                sothree:layout_constraintTop_toBottomOf="@+id/volumeBar" />
 
             <LinearLayout
-                android:id="@+id/editSoundButtonsLayout"
+                android:id="@+id/editSoundsLinearLayout"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@color/cardview_light_background"
-                android:orientation="vertical">
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                sothree:layout_constraintStart_toStartOf="parent"
+                sothree:layout_constraintEnd_toEndOf="parent"
+                sothree:layout_constraintTop_toBottomOf="@id/editSoundTextView">
 
-
-                <LinearLayout
-                    android:visibility="invisible"
-                    android:id="@+id/mobileButtonsLayout"
+                <android.support.constraint.ConstraintLayout
+                    android:id="@+id/editSoundButtonsLayout"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:layout_height="240dp"
+                    android:background="@color/cardview_light_background"
+                    android:orientation="vertical"
+                    sothree:layout_constraintBottom_toBottomOf="parent"
+                    sothree:layout_constraintEnd_toEndOf="parent"
+                    sothree:layout_constraintStart_toStartOf="parent"
+                    sothree:layout_constraintTop_toBottomOf="@+id/editSoundsLinearLayout">
 
-                    <ImageButton
-                        android:id="@+id/mobile_on_button"
-                        style="?android:attr/borderlessButtonStyle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:onClick="SoundSelectionMade"
-                        android:src="@drawable/mobile_on_sound_button"/>
 
-                    <ImageButton
-                        android:id="@+id/mobile_off_button"
-                        style="?android:attr/borderlessButtonStyle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:onClick="SoundSelectionMade"
-                        android:src="@drawable/mobile_off_sound_button"/>
+                    <android.support.constraint.ConstraintLayout
+                        android:id="@+id/mobileButtonsLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="110dp"
+                        android:orientation="horizontal"
+                        android:visibility="visible"
+                        sothree:layout_constraintBottom_toTopOf="@id/wifiButtonsLayout"
+                        sothree:layout_constraintEnd_toEndOf="parent"
+                        sothree:layout_constraintStart_toStartOf="parent"
+                        sothree:layout_constraintTop_toTopOf="parent">
 
-                </LinearLayout>
+                        <ImageButton
+                            android:id="@+id/mobile_on_button"
+                            style="?android:attr/borderlessButtonStyle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:adjustViewBounds="true"
+                            android:onClick="SoundSelectionMade"
+                            android:scaleType="fitStart"
+                            android:src="@drawable/mobile_on_sound_button"
+                            sothree:layout_constraintBottom_toBottomOf="parent"
+                            sothree:layout_constraintEnd_toStartOf="@id/mobile_off_button"
+                            sothree:layout_constraintHorizontal_chainStyle="packed"
+                            sothree:layout_constraintStart_toStartOf="parent"
+                            sothree:layout_constraintTop_toTopOf="parent" />
 
-                <LinearLayout
-                    android:visibility="invisible"
-                    android:id="@+id/wifiButtonsLayout"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                        <ImageButton
+                            android:id="@+id/mobile_off_button"
+                            style="?android:attr/borderlessButtonStyle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_toEndOf="@+id/mobile_on_button"
+                            android:adjustViewBounds="true"
+                            android:onClick="SoundSelectionMade"
+                            android:scaleType="fitEnd"
+                            android:src="@drawable/mobile_off_sound_button"
+                            sothree:layout_constraintBottom_toBottomOf="parent"
+                            sothree:layout_constraintEnd_toEndOf="parent"
+                            sothree:layout_constraintStart_toEndOf="@id/mobile_on_button"
+                            sothree:layout_constraintTop_toTopOf="parent" />
 
-                    <ImageButton
-                        android:id="@+id/wifi_on_button"
-                        style="?android:attr/borderlessButtonStyle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:onClick="SoundSelectionMade"
-                        android:src="@drawable/wifi_on_sound_button"/>
+                    </android.support.constraint.ConstraintLayout>
 
-                    <ImageButton
-                        android:id="@+id/wifi_off_button"
-                        style="?android:attr/borderlessButtonStyle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:onClick="SoundSelectionMade"
-                        android:src="@drawable/wifi_off_sound_button"/>
+                    <android.support.constraint.ConstraintLayout
+                        android:id="@+id/wifiButtonsLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="110dp"
+                        android:orientation="horizontal"
+                        android:visibility="visible"
+                        sothree:layout_constraintBottom_toBottomOf="parent"
+                        sothree:layout_constraintEnd_toEndOf="parent"
+                        sothree:layout_constraintStart_toStartOf="parent"
+                        sothree:layout_constraintTop_toBottomOf="@id/mobileButtonsLayout">
 
-                </LinearLayout>
+                        <ImageButton
+                            android:id="@+id/wifi_on_button"
+                            style="?android:attr/borderlessButtonStyle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:adjustViewBounds="true"
+                            android:onClick="SoundSelectionMade"
+                            android:scaleType="fitStart"
+                            android:src="@drawable/wifi_on_sound_button"
+                            sothree:layout_constraintBottom_toBottomOf="parent"
+                            sothree:layout_constraintEnd_toStartOf="@+id/wifi_off_button"
+                            sothree:layout_constraintHorizontal_chainStyle="packed"
+                            sothree:layout_constraintStart_toStartOf="parent"
+                            sothree:layout_constraintTop_toTopOf="parent" />
+
+                        <ImageButton
+                            android:id="@+id/wifi_off_button"
+                            style="?android:attr/borderlessButtonStyle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_toEndOf="@+id/wifi_on_button"
+                            android:adjustViewBounds="true"
+                            android:onClick="SoundSelectionMade"
+                            android:scaleType="fitEnd"
+                            android:src="@drawable/wifi_off_sound_button"
+                            sothree:layout_constraintBottom_toBottomOf="parent"
+                            sothree:layout_constraintEnd_toEndOf="parent"
+                            sothree:layout_constraintStart_toEndOf="@id/wifi_on_button"
+                            sothree:layout_constraintTop_toTopOf="parent" />
+
+                    </android.support.constraint.ConstraintLayout>
+                </android.support.constraint.ConstraintLayout>
             </LinearLayout>
 
-        </LinearLayout>
-    </FrameLayout>
+            <Space
+                android:layout_width="wrap_content"
+                android:layout_height="70dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginBottom="8dp"
+                sothree:layout_constraintBottom_toBottomOf="parent"
+                sothree:layout_constraintEnd_toEndOf="parent"
+                sothree:layout_constraintStart_toStartOf="parent"
+                sothree:layout_constraintTop_toBottomOf="@+id/editSoundsLinearLayout" />
+            <!--<android.support.constraint.Guideline-->
+                <!--android:id="@+id/guideline"-->
+                <!--android:layout_width="wrap_content"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:orientation="vertical"-->
+                <!--sothree:layout_constraintGuide_begin="20dp" />-->
+        </android.support.constraint.ConstraintLayout>
+    </ScrollView>
 
     <!-- SLIDING LAYOUT -->
     <LinearLayout
@@ -151,14 +236,14 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="40dp"
+            android:layout_height="30dp"
             android:orientation="horizontal">
 
             <TextView
                 android:id="@+id/logHeader"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="1"
+                android:layout_weight="0.8"
                 android:textSize="16sp"
                 android:text="Service Logs"
                 android:gravity="center"
@@ -166,9 +251,9 @@
         </LinearLayout>
 
         <ListView
-            android:id="@+id/list"
+            android:id="@+id/logList"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"></ListView>
+            android:layout_weight="1" />
     </LinearLayout>
 </com.sothree.slidinguppanel.SlidingUpPanelLayout>
