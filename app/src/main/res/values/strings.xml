@@ -25,6 +25,7 @@
     <string name="ISMMDDFormatBoolean">isMMDD</string>
     <string name="SaveLogsValue">SaveLogs</string>
     <string name="PreviewSoundBoolean">PreviewSoundBoolean</string>
+    <string name="PersistAlertVolume">PersistAlertVolume</string>
     // change to const
     <string name="EnableToastBoolean">EnableToastBoolean</string>
 
@@ -69,5 +70,6 @@
     <string name="nav_header_subtitle">android.studio@android.com</string>
     <string name="nav_header_desc">Navigation header</string>
     <string name="delete_logs">Delete Logs</string>
+    <string name="persist_alert_volume">Persist Alert Volume</string>
 
 </resources>

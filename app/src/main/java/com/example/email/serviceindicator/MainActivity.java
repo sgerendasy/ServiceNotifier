@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.res.ColorStateList;
 import android.graphics.Typeface;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -66,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
     public static int oldVolume;
     public boolean appIsOn;
 
-    public static MainActivity MA;
+    public static MainActivity mainActivityInstance;
     private SlidingUpPanelLayout mLayout;
     // The BroadcastReceiver that tracks network connectivity changes.
     public static NetworkReceiver receiver = new NetworkReceiver();
@@ -88,18 +89,19 @@ public class MainActivity extends AppCompatActivity {
 
     public static IntentFilter filter;
     public static AudioManager mAudioManager;
+    public static int MaxVolume = 100;
     public static MediaPlayer mediaPlayer = new MediaPlayer();
     private LogEntrySQL logEntryDB;
-    public LinearLayout setSoundsLayout;
     public static RadioGroup leftRadioGroupColumn;
     public static RadioGroup rightRadioGroupColumn;
+    public LinearLayout setSoundsLayout;
     public LinearLayout labelLayout;
     public LinearLayout confirmationLayout;
     public LinearLayout soundsTemp;
 
     public static MainActivity getInstance()
     {
-        return MA;
+        return mainActivityInstance;
     }
 
     @Override
@@ -109,80 +111,74 @@ public class MainActivity extends AppCompatActivity {
         // Registers BroadcastReceiver to track network connection changes.
         filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
         receiver = new NetworkReceiver();
-        MA = this;
-
         mAudioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
+        if (mAudioManager != null)
+            MaxVolume = mAudioManager.getStreamMaxVolume(audioStreamType);
+        mainActivityInstance = this;
 
+        // Set persistent data values
         sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        ImageButton appOnButton = (ImageButton) findViewById(R.id.appOnButton);
 
         appIsOn = sharedPref.getBoolean(getResources().getString(R.string.AppOnPref), true);
         int appOnImageId = appIsOn ? R.drawable.connected_logo : R.drawable.disconnected_logo;
-        appOnButton.setImageResource(appOnImageId);
+        ((ImageButton)findViewById(R.id.appOnButton)).setImageResource(appOnImageId);
+
         SeekBar volumeSlider = (SeekBar) findViewById(R.id.volumeBar);
         volumeSlider.setProgress(sharedPref.getInt(getResources().getString(R.string.VolumePref), 70));
         ((TextView)findViewById(R.id.volumeLabel)).setText("Volume: " + volumeSlider.getProgress() + "%");
-        mAudioManager.setStreamVolume(audioStreamType, volumeSlider.getProgress(), AudioManager.FLAG_VIBRATE);
+        int realVolume = (int)(MaxVolume * ((float)volumeSlider.getProgress() / 100));
+        mAudioManager.setStreamVolume(audioStreamType, realVolume, AudioManager.FLAG_VIBRATE);
+
         is12HourFormat = sharedPref.getBoolean(getResources().getString(R.string.IsTwelveHourBoolean), true);
         isMMDDFormat = sharedPref.getBoolean(getResources().getString(R.string.ISMMDDFormatBoolean), true);
-
         logEntryDB = new LogEntrySQL(this);
         logArray = logEntryDB.getLogs(sharedPref.getInt(getResources().getString(R.string.SaveLogsValue), 10));
+
 
         populateSoundsDict();
         populateRadioGroupLayout();
         InitializeSoundSelectionLabel();
         InitializeSoundConfirmationLayout();
         SetLayoutConstraints();
+
+        // Set fonts
         Typeface ubuntuLight = Typeface.createFromAsset(getAssets(), "fonts/Ubuntu-L.ttf");
         ((TextView)findViewById(R.id.volumeLabel)).setTypeface(ubuntuLight);
 
 
-        // perform seek bar change listener event used for getting the progress value
+        // seek bar listener event for getting the volume's int value
         volumeSlider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener()
         {
-            int progressChangedValue = 0;
-
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                progressChangedValue = progress;
-                sharedPref.edit().putInt(getResources().getString(R.string.VolumePref), progress).apply();
-                ((TextView)findViewById(R.id.volumeLabel)).setText("Volume: " + progress + "%");
-                mAudioManager.setStreamVolume(audioStreamType, progress, AudioManager.FLAG_VIBRATE);
+                int realVolume = (int)(MaxVolume * ((float)progress / 100));                                         // calculate it
+                sharedPref.edit().putInt(getResources().getString(R.string.VolumePref), progress).apply();          // persist it
+                ((TextView)findViewById(R.id.volumeLabel)).setText("Volume: " + progress + "%");                   // label it
+                mAudioManager.setStreamVolume(audioStreamType, realVolume, AudioManager.FLAG_VIBRATE);            // bop it
             }
 
             @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
+            public void onStartTrackingTouch(SeekBar seekBar) { }
 
             @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
+            public void onStopTrackingTouch(SeekBar seekBar) { }
         });
 
-
-        ListView logListView = (ListView) findViewById(R.id.logList);
-
-        arrayAdapter = new ArrayAdapter<LogEntry>(
+        // Setup the log entries slide-up
+        ListView logListView = (ListView)findViewById(R.id.logList);
+        arrayAdapter = new ArrayAdapter<>(
                 this,
                 android.R.layout.simple_list_item_1,
                 logArray );
         logListView.setAdapter(arrayAdapter);
 
-        mLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
+        mLayout = (SlidingUpPanelLayout)findViewById(R.id.sliding_layout);
         mLayout.setPanelHeight(80);
-
         mLayout.addPanelSlideListener(new SlidingUpPanelLayout.PanelSlideListener() {
             @Override
-            public void onPanelSlide(View panel, float slideOffset) {
-
-            }
+            public void onPanelSlide(View panel, float slideOffset) { }
 
             @Override
-            public void onPanelStateChanged(View panel, SlidingUpPanelLayout.PanelState previousState, SlidingUpPanelLayout.PanelState newState) {
-
-            }
+            public void onPanelStateChanged(View panel, SlidingUpPanelLayout.PanelState previousState, SlidingUpPanelLayout.PanelState newState) { }
         });
         mLayout.setFadeOnClickListener(new View.OnClickListener() {
             @Override
@@ -191,7 +187,9 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        this.getApplicationContext().registerReceiver(receiver, filter);
+
+        toggleService(appIsOn, false);
+
     }
 
     @Override
@@ -396,6 +394,17 @@ public class MainActivity extends AppCompatActivity {
         soundsTemp.addView(confirmationLayout);
     }
 
+    public void WHATEVER(View view)
+    {
+        try {
+            getApplicationContext().unregisterReceiver(receiver);
+        }
+        catch (Exception e)
+        {
+            Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
     public void populateRadioGroupLayout()
     {
         setSoundsLayout = new LinearLayout(this);
@@ -412,10 +421,16 @@ public class MainActivity extends AppCompatActivity {
         leftRadioGroupColumn.setOnCheckedChangeListener(leftColumnListener);
         rightRadioGroupColumn.setOnCheckedChangeListener(rightColumnListener);
 
+        ColorStateList radioButtonColorList = new ColorStateList(
+                new int[][]{ new int[]{-android.R.attr.state_enabled}, new int[]{android.R.attr.state_enabled}},
+                new int[] { getColor(R.color.greyBackground), getColor(R.color.blueText) }
+        );
+
 
         for (int i = 0; i < soundsArray.size() / 2; i++)
         {
             RadioButton newRadioButton = new RadioButton(this);
+            newRadioButton.setButtonTintList(radioButtonColorList);
             newRadioButton.setText(soundsArray.get(i).soundName);
             newRadioButton.setId(soundsArray.get(i).radioButtonIndex);
             leftRadioGroupColumn.addView(newRadioButton);
@@ -423,6 +438,7 @@ public class MainActivity extends AppCompatActivity {
         for (int i = soundsArray.size() / 2; i < soundsArray.size(); i++)
         {
             RadioButton newRadioButton = new RadioButton(this);
+            newRadioButton.setButtonTintList(radioButtonColorList);
             newRadioButton.setText(soundsArray.get(i).soundName);
             newRadioButton.setId(soundsArray.get(i).radioButtonIndex);
             rightRadioGroupColumn.addView(newRadioButton);
@@ -460,7 +476,11 @@ public class MainActivity extends AppCompatActivity {
         int appOnImageId = appIsOn ? R.drawable.connected_logo : R.drawable.disconnected_logo;
         ((ImageButton)findViewById(R.id.appOnButton)).setImageResource(appOnImageId);
         sharedPref.edit().putBoolean(getResources().getString(R.string.AppOnPref), appIsOn).apply();
-        toggleService(appIsOn);
+        toggleService(appIsOn, true);
+        DateFormat datetimeFormat = new SimpleDateFormat(logEntryDateTimeFormat);
+        String logDatetime = datetimeFormat.format(Calendar.getInstance().getTime());
+        String eventString = appIsOn ? "Service Alert Turned On" : "Service Alert Turned Off";
+        addLog(logDatetime, eventString);
     }
 
     public void SetSoundsButtonClicked(View view)
@@ -600,17 +620,6 @@ public class MainActivity extends AppCompatActivity {
         soundsArray.add(new SoundInfo(R.raw.slide_down, 11, getResources().getString(R.string.SlideDown)));
     }
 
-
-    public SoundInfo getSoundInfo(String soundName)
-    {
-        for (SoundInfo soundInfo : soundsArray)
-        {
-            if (soundInfo.soundName.equals(soundName))
-                return soundInfo;
-        }
-        return null;
-    }
-
     public SoundInfo getSoundInfo(int soundId)
     {
         for (SoundInfo soundInfo : soundsArray)
@@ -631,25 +640,23 @@ public class MainActivity extends AppCompatActivity {
         return null;
     }
 
-    public void toggleService(boolean on)
+    public void toggleService(boolean on, boolean showToast)
     {
         try
         {
+            String serviceChangeString = "Service Alert Turned On";
             if (on)
             {
-                if (MainActivity.getInstance().sharedPref.getBoolean("EnableToastBoolean", true))
-                {
-                    Toast.makeText(getApplicationContext(), "Service on", Toast.LENGTH_SHORT).show();
-                }
                 this.getApplicationContext().registerReceiver(receiver, filter);
             }
             else
             {
-                if (MainActivity.getInstance().sharedPref.getBoolean("EnableToastBoolean", true))
-                {
-                    Toast.makeText(getApplicationContext(), "Service off", Toast.LENGTH_SHORT).show();
-                }
+                serviceChangeString = "Service Alert Turned Off";
                 this.getApplicationContext().unregisterReceiver(receiver);
+            }
+            if (showToast && MainActivity.getInstance().sharedPref.getBoolean("EnableToastBoolean", true))
+            {
+                Toast.makeText(getApplicationContext(), serviceChangeString, Toast.LENGTH_SHORT).show();
             }
         }
         catch (Exception e)
@@ -673,13 +680,18 @@ class NetworkReceiver extends BroadcastReceiver
         boolean CheckForMobileConnection = CheckForConnection.equals("BothServiceTypes") || CheckForConnection.equals("MobileOnly");
         boolean CheckForWifiConnection = CheckForConnection.equals("BothServiceTypes") || CheckForConnection.equals("WifiOnly");
 
+        if (MainActivity.getInstance().sharedPref.getBoolean("PersistAlertVolume", false))
+        {
+            oldVolume = MainActivity.mAudioManager.getStreamVolume(audioStreamType);
+            int volume = MainActivity.getInstance().sharedPref.getInt("VolumePref", 70);
+            int realVolume = (int)(MainActivity.MaxVolume * ((float)volume / 100));
+            MainActivity.mAudioManager.setStreamVolume(audioStreamType, realVolume, AudioManager.FLAG_VIBRATE);
+        }
+
         if(networkInfo != null)
         {
             if (networkInfo.getType() == ConnectivityManager.TYPE_WIFI && !wifiConnected && CheckForWifiConnection)
             {
-                oldVolume = MainActivity.mAudioManager.getStreamVolume(audioStreamType);
-                int volume = MainActivity.getInstance().sharedPref.getInt("VolumePref", 70);
-                MainActivity.mAudioManager.setStreamVolume(audioStreamType, volume, AudioManager.FLAG_VIBRATE);
 
                 wifiConnected = true;
 
@@ -692,17 +704,18 @@ class NetworkReceiver extends BroadcastReceiver
                 mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                     @Override
                     public void onCompletion(MediaPlayer mp) {
-                        MainActivity.mAudioManager.setStreamVolume(audioStreamType, oldVolume, AudioManager.FLAG_VIBRATE);
+                        if (MainActivity.getInstance().sharedPref.getBoolean("PersistAlertVolume", false))
+                            MainActivity.mAudioManager.setStreamVolume(audioStreamType, oldVolume, AudioManager.FLAG_VIBRATE);
                         mediaPlayer.release();
                         mediaPlayer = null;
                     }
                 });
                 mediaPlayer.start();
-                MainActivity.getInstance().setWifiName(networkInfo.getExtraInfo());
+                MainActivity.getInstance().setWifiName((networkInfo.getExtraInfo() == null ? "unknown" : networkInfo.getExtraInfo()));
 
                 DateFormat datetimeFormat = new SimpleDateFormat(logEntryDateTimeFormat);
                 String logDatetime = datetimeFormat.format(Calendar.getInstance().getTime());
-                String connInfo = "Wifi connected to " + networkInfo.getExtraInfo();
+                String connInfo = "Wifi connected to " + (networkInfo.getExtraInfo() == null ? "unknown" : networkInfo.getExtraInfo());
                 MainActivity.getInstance().addLog(logDatetime, connInfo);
                 if (MainActivity.getInstance().sharedPref.getBoolean("EnableToastBoolean", true))
                     Toast.makeText(context, connInfo, Toast.LENGTH_SHORT).show();
@@ -710,10 +723,6 @@ class NetworkReceiver extends BroadcastReceiver
             }
             if (networkInfo.getType() == ConnectivityManager.TYPE_MOBILE && !mobileConnected && CheckForMobileConnection)
             {
-                oldVolume = MainActivity.mAudioManager.getStreamVolume(audioStreamType);
-                int volume = MainActivity.getInstance().sharedPref.getInt("VolumePref", 70);
-                MainActivity.mAudioManager.setStreamVolume(audioStreamType, volume, AudioManager.FLAG_VIBRATE);
-
                 mobileConnected = true;
 
                 int currentSoundId = MainActivity.getInstance().sharedPref.getInt(MOBILE_ON_TYPE, R.raw.guitar_riff);
@@ -725,17 +734,18 @@ class NetworkReceiver extends BroadcastReceiver
                 mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                     @Override
                     public void onCompletion(MediaPlayer mp) {
-                        MainActivity.mAudioManager.setStreamVolume(audioStreamType, oldVolume, AudioManager.FLAG_VIBRATE);
+                        if (MainActivity.getInstance().sharedPref.getBoolean("PersistAlertVolume", false))
+                            MainActivity.mAudioManager.setStreamVolume(audioStreamType, oldVolume, AudioManager.FLAG_VIBRATE);
                         mediaPlayer.release();
                         mediaPlayer = null;
                     }
                 });
                 mediaPlayer.start();
-                MainActivity.getInstance().setMobileName(networkInfo.getExtraInfo());
+                MainActivity.getInstance().setMobileName((networkInfo.getExtraInfo() == null ? "unknown" : networkInfo.getExtraInfo()));
 
                 DateFormat datetimeFormat = new SimpleDateFormat(logEntryDateTimeFormat);
                 String logDatetime = datetimeFormat.format(Calendar.getInstance().getTime());
-                String connInfo = "Mobile connected to " + networkInfo.getExtraInfo();
+                String connInfo = "Mobile connected to " + (networkInfo.getExtraInfo() == null ? "unknown" : networkInfo.getExtraInfo());
                 MainActivity.getInstance().addLog(logDatetime, connInfo);
                 if (MainActivity.getInstance().sharedPref.getBoolean("EnableToastBoolean", true))
                     Toast.makeText(context, connInfo, Toast.LENGTH_SHORT).show();
@@ -745,10 +755,6 @@ class NetworkReceiver extends BroadcastReceiver
         {
             if (!wifi && wifiConnected && CheckForWifiConnection)
             {
-                oldVolume = MainActivity.mAudioManager.getStreamVolume(audioStreamType);
-                int volume = MainActivity.getInstance().sharedPref.getInt("VolumePref", 70);
-                MainActivity.mAudioManager.setStreamVolume(audioStreamType, volume, AudioManager.FLAG_VIBRATE);
-
                 wifiConnected = false;
 
                 int currentSoundId = MainActivity.getInstance().sharedPref.getInt(WIFI_OFF_TYPE, R.raw.negative);
@@ -761,7 +767,8 @@ class NetworkReceiver extends BroadcastReceiver
                 mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                     @Override
                     public void onCompletion(MediaPlayer mp) {
-                        MainActivity.mAudioManager.setStreamVolume(audioStreamType, oldVolume, AudioManager.FLAG_VIBRATE);
+                        if (MainActivity.getInstance().sharedPref.getBoolean("PersistAlertVolume", false))
+                            MainActivity.mAudioManager.setStreamVolume(audioStreamType, oldVolume, AudioManager.FLAG_VIBRATE);
                         mediaPlayer.release();
                         mediaPlayer = null;
                     }
@@ -777,9 +784,6 @@ class NetworkReceiver extends BroadcastReceiver
             }
             else if(!mobile && mobileConnected && CheckForMobileConnection)
             {
-                oldVolume = MainActivity.mAudioManager.getStreamVolume(audioStreamType);
-                int volume = MainActivity.getInstance().sharedPref.getInt("VolumePref", 70);
-                MainActivity.mAudioManager.setStreamVolume(audioStreamType, volume, AudioManager.FLAG_VIBRATE);
 
                 mobileConnected = false;
 
@@ -792,7 +796,8 @@ class NetworkReceiver extends BroadcastReceiver
                 mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                     @Override
                     public void onCompletion(MediaPlayer mp) {
-                        MainActivity.mAudioManager.setStreamVolume(audioStreamType, oldVolume, AudioManager.FLAG_VIBRATE);
+                        if (MainActivity.getInstance().sharedPref.getBoolean("PersistAlertVolume", false))
+                            MainActivity.mAudioManager.setStreamVolume(audioStreamType, oldVolume, AudioManager.FLAG_VIBRATE);
                         mediaPlayer.release();
                         mediaPlayer = null;
                     }

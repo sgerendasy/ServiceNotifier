@@ -28,6 +28,7 @@ public class Settings extends AppCompatActivity {
 
         ((CheckBox)findViewById(R.id.previewSoundCheckbox)).setChecked(sharedPreferences.getBoolean(getResources().getString(R.string.PreviewSoundBoolean), true));
         ((CheckBox)findViewById(R.id.enableToastCheckbox)).setChecked(sharedPreferences.getBoolean(getResources().getString(R.string.EnableToastBoolean), false));
+        ((CheckBox)findViewById(R.id.PersistVolumeCheckbox)).setChecked(sharedPreferences.getBoolean(getResources().getString(R.string.PersistAlertVolume), false));
 
         boolean is12HourChecked = sharedPreferences.getBoolean(getResources().getString(R.string.IsTwelveHourBoolean), true);
         if (is12HourChecked)
@@ -105,6 +106,7 @@ public class Settings extends AppCompatActivity {
         ((CheckBox)findViewById(R.id.previewSoundCheckbox)).setTypeface(ubuntuLight);
         ((CheckBox)findViewById(R.id.enableToastCheckbox)).setTypeface(ubuntuLight);
         ((Button)findViewById(R.id.DeleteLogsButton)).setTypeface(ubuntuLight);
+        ((Button)findViewById(R.id.PersistVolumeCheckbox)).setTypeface(ubuntuLight);
     }
 
     public void TimeFormatClicked(View view)
@@ -180,6 +182,12 @@ public class Settings extends AppCompatActivity {
         }
     }
 
+    public void EnablePersistentVolumeChecked(View view)
+    {
+        boolean value = ((CheckBox)view).isChecked();
+        sharedPreferences.edit().putBoolean(getResources().getString(R.string.PersistAlertVolume), value).apply();
+    }
+
     public void DeleteLogsClicked(View view)
     {
         AlertDialog alertDialog = new AlertDialog.Builder(this)
@@ -226,5 +234,50 @@ public class Settings extends AppCompatActivity {
                 sharedPreferences.edit().putString(getResources().getString(R.string.ServiceTypeToCheckFor), getResources().getString(R.string.WifiOnly)).apply();
                 break;
         }
+    }
+
+    public void HelpButtonPressed(View view)
+    {
+        int helpButtonId = view.getId();
+        String message = "";
+        String title = "";
+        DialogInterface.OnClickListener neutralButtonListener = null;
+        String neutralButtonText = "";
+        switch (helpButtonId)
+        {
+            case R.id.PersistAlertVolumeHelpButton:
+                title = "Persist Alert Volume";
+                message = "When you adjust the media volume output on your phone by using either the volume buttons on the side of your phone, or through another app, it affects the volume level of the alerts played though this app. By checking this option, the media volume output will play alerts at the volume level set from the home screen regardless of what volume level you or other apps have set.";
+                break;
+            case R.id.PreviewSoundHelpButton:
+                title = "Preview Alert Sound";
+                message = "Checking this option has the system preview an alert sound when it is selected from the \"Set Alert Sounds\" menu.";
+                break;
+            case R.id.EnableToastHelpButton:
+                title = "Enable Toast Notifications";
+                message = "Checking this option enables Toast notifications for a service change event. To see what a Toast message is, press \"Toast me\".";
+                neutralButtonText = "Toast me";
+                neutralButtonListener = new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Toast.makeText(Settings.this, "This is a Toast message", Toast.LENGTH_SHORT).show();
+                    }
+                };
+                break;
+        }
+        AlertDialog alertDialog = new AlertDialog.Builder(this)
+                .setTitle(title)
+                .setMessage(message).setNeutralButton(neutralButtonText, neutralButtonListener)
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                    }}).create();
+
+        alertDialog.setOnShowListener( new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface ad) {
+                ((AlertDialog)ad).getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(getColor(R.color.blueText));
+            }
+        });
+        alertDialog.show();
     }
 }

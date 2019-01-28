@@ -30,6 +30,15 @@
             android:gravity="start"
             android:orientation="vertical">
 
+            <!--<Button-->
+                <!--android:layout_width="wrap_content"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:layout_marginStart="0dp"-->
+                <!--sothree:layout_constraintStart_toStartOf="parent"-->
+                <!--sothree:layout_constraintTop_toTopOf="parent"-->
+                <!--android:text="whatever"-->
+                <!--android:onClick="WHATEVER"/>-->
+
             <ImageButton
                 android:id="@+id/appOnButton"
                 style="?android:attr/borderlessButtonStyle"
@@ -78,7 +87,7 @@
             <Space
                 android:id="@+id/space"
                 android:layout_width="wrap_content"
-                android:layout_height="20dp"
+                android:layout_height="34dp"
                 sothree:layout_constraintEnd_toEndOf="@id/volumeBar"
                 sothree:layout_constraintStart_toStartOf="@id/volumeBar"
                 sothree:layout_constraintTop_toTopOf="@id/volumeBar" />

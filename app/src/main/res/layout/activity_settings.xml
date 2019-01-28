@@ -14,7 +14,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="14dp"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
             android:layout_marginBottom="8dp"
@@ -66,7 +66,7 @@
 
             <Space
                 android:layout_width="match_parent"
-                android:layout_height="22dp" />
+                android:layout_height="18dp" />
 
             <TextView
                 android:id="@+id/LogTimeFormatLabel"
@@ -102,7 +102,7 @@
 
             <Space
                 android:layout_width="match_parent"
-                android:layout_height="22dp" />
+                android:layout_height="18dp" />
 
             <TextView
                 android:id="@+id/LogDateFormatLabel"
@@ -140,7 +140,7 @@
 
             <Space
                 android:layout_width="match_parent"
-                android:layout_height="22dp" />
+                android:layout_height="18dp" />
 
             <TextView
                 android:id="@+id/NumberOfLogsLabel"
@@ -201,7 +201,7 @@
 
             <Space
                 android:layout_width="match_parent"
-                android:layout_height="22dp" />
+                android:layout_height="18dp" />
 
             <TextView
                 android:id="@+id/OtherSettingsLabel"
@@ -210,27 +210,90 @@
                 android:text="@string/other_settings"
                 android:textSize="16sp" />
 
-            <CheckBox
-                android:id="@+id/previewSoundCheckbox"
-                android:layout_width="match_parent"
+            <LinearLayout
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:buttonTint="@color/blueText"
-                android:checked="true"
-                android:onClick="PreviewSoundChecked"
-                android:text="@string/preview_alert_sound" />
+                android:orientation="horizontal">
 
-            <CheckBox
-                android:id="@+id/enableToastCheckbox"
-                android:layout_width="match_parent"
+                <CheckBox
+                    android:id="@+id/previewSoundCheckbox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:buttonTint="@color/blueText"
+                    android:checked="true"
+                    android:onClick="PreviewSoundChecked"
+                    android:text="@string/preview_alert_sound" />
+
+                <ImageButton
+                    android:id="@+id/PreviewSoundHelpButton"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    style="?android:attr/borderlessButtonStyle"
+                    android:layout_marginStart="8dp"
+                    android:src="@drawable/question_mark"
+                    android:onClick="HelpButtonPressed"
+                    android:layout_gravity="center_vertical"
+                    />
+            </LinearLayout>
+
+
+            <LinearLayout
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:buttonTint="@color/blueText"
-                android:checked="true"
-                android:onClick="EnableToastChecked"
-                android:text="@string/enable_toast_notifications" />
+                android:orientation="horizontal">
+
+                <CheckBox
+                    android:id="@+id/enableToastCheckbox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:buttonTint="@color/blueText"
+                    android:checked="true"
+                    android:onClick="EnableToastChecked"
+                    android:text="@string/enable_toast_notifications" />
+
+                <ImageButton
+                    android:id="@+id/EnableToastHelpButton"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    style="?android:attr/borderlessButtonStyle"
+                    android:layout_marginStart="8dp"
+                    android:src="@drawable/question_mark"
+                    android:onClick="HelpButtonPressed"
+                    android:layout_gravity="center_vertical"
+                    />
+            </LinearLayout>
+
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <CheckBox
+                    android:id="@+id/PersistVolumeCheckbox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:buttonTint="@color/blueText"
+                    android:checked="true"
+                    android:onClick="EnablePersistentVolumeChecked"
+                    android:text="@string/persist_alert_volume" />
+
+                <ImageButton
+                    android:id="@+id/PersistAlertVolumeHelpButton"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    style="?android:attr/borderlessButtonStyle"
+                    android:layout_marginStart="8dp"
+                    android:src="@drawable/question_mark"
+                    android:onClick="HelpButtonPressed"
+                    android:layout_gravity="center_vertical"
+                    />
+            </LinearLayout>
+
 
             <Space
                 android:layout_width="match_parent"
-                android:layout_height="22dp" />
+                android:layout_height="18dp" />
 
             <Button
                 android:id="@+id/DeleteLogsButton"
