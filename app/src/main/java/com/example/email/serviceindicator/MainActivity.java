@@ -459,7 +459,6 @@ public class MainActivity extends AppCompatActivity {
         appIsOn = !appIsOn;
         int appOnImageId = appIsOn ? R.drawable.connected_logo : R.drawable.disconnected_logo;
         ((ImageButton)findViewById(R.id.appOnButton)).setImageResource(appOnImageId);
-        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
         sharedPref.edit().putBoolean(getResources().getString(R.string.AppOnPref), appIsOn).apply();
         toggleService(appIsOn);
     }

@@ -22,9 +22,12 @@ public class Settings extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
+
+        // Set persistent data values
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        CheckBox previewAlertCheckbox = (CheckBox) findViewById(R.id.previewSoundCheckbox);
-        previewAlertCheckbox.setChecked(sharedPreferences.getBoolean(getResources().getString(R.string.PreviewSoundBoolean), true));
+
+        ((CheckBox)findViewById(R.id.previewSoundCheckbox)).setChecked(sharedPreferences.getBoolean(getResources().getString(R.string.PreviewSoundBoolean), true));
+        ((CheckBox)findViewById(R.id.enableToastCheckbox)).setChecked(sharedPreferences.getBoolean(getResources().getString(R.string.EnableToastBoolean), false));
 
         boolean is12HourChecked = sharedPreferences.getBoolean(getResources().getString(R.string.IsTwelveHourBoolean), true);
         if (is12HourChecked)
@@ -61,7 +64,6 @@ public class Settings extends AppCompatActivity {
         }
 
         String serviceType = sharedPreferences.getString(getResources().getString(R.string.ServiceTypeToCheckFor), getResources().getString(R.string.BothServiceTypes));
-
         switch (serviceType)
         {
             case "BothServiceTypes":
