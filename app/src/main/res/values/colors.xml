@@ -4,8 +4,14 @@
     <color name="colorPrimaryDark">#303f9f</color>
     <color name="colorAccent">#FF4081</color>
     <color name="greyBackground">#999999</color>
-    <color name="redText">#dd3b3a</color>
+    <color name="greyBackgroundDarker">#838383</color>
+    <color name="greyBackgroundDarkest">#737373</color>
+    <color name="redText">#ee4c4b</color>
+    <color name="redTextDarker">#aa0807</color>
+    <color name="redBackground">#e0302d</color>
     <color name="blueText">#3d819f</color>
+    <color name="blueBackground">#6192ac</color>
+    <color name="blueBackgroundDarker">#50788e</color>
 
 
 </resources>

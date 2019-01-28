@@ -50,7 +50,7 @@ public class LogEntrySQL extends SQLiteOpenHelper
         ContentValues values = new ContentValues();
         values.put(DATETIME, newLogEntry.dateTime);
         values.put(CONNECTION_INFO, newLogEntry.connectionInfo);
-        getWritableDatabase().insert(LOG_LIST_TABLE, null, values);
+        writableDB.insert(LOG_LIST_TABLE, null, values);
     }
 
     public ArrayList<LogEntry> getLogs(int count) {
@@ -67,6 +67,12 @@ public class LogEntrySQL extends SQLiteOpenHelper
         }
         cursor.close();
         return logs;
+    }
+
+    public int ClearLogs()
+    {
+//        writableDB.execSQL("delete from " + LOG_LIST_TABLE);
+        return writableDB.delete(LOG_LIST_TABLE, "1", null);
     }
 
     @Override

@@ -1,13 +1,19 @@
 package com.example.email.serviceindicator;
 
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.graphics.Typeface;
 import android.preference.PreferenceManager;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.RadioButton;
+import android.widget.TextView;
+import android.widget.Toast;
 
 public class Settings extends AppCompatActivity {
     private static final String TAG = "SETTINGS";
@@ -38,6 +44,9 @@ public class Settings extends AppCompatActivity {
             case -1:
                 ((RadioButton)findViewById(R.id.InfiniteLogsRadioButton)).setChecked(true);
                 break;
+            case 0:
+                ((RadioButton)findViewById(R.id.ZeroLogsRadioButton)).setChecked(true);
+                break;
             case 10:
                 ((RadioButton)findViewById(R.id.TenLogsRadioButton)).setChecked(true);
                 break;
@@ -50,6 +59,50 @@ public class Settings extends AppCompatActivity {
             default:
                 Log.d(TAG, "Unknown selection made for number of logs to save.");
         }
+
+        String serviceType = sharedPreferences.getString(getResources().getString(R.string.ServiceTypeToCheckFor), getResources().getString(R.string.BothServiceTypes));
+
+        switch (serviceType)
+        {
+            case "BothServiceTypes":
+                ((RadioButton)findViewById(R.id.BothServiceTypes)).setChecked(true);
+                break;
+            case "MobileOnly":
+                ((RadioButton)findViewById(R.id.MobileOnly)).setChecked(true);
+                break;
+            case "WifiOnly":
+                ((RadioButton)findViewById(R.id.WifiOnly)).setChecked(true);
+                break;
+        }
+
+        // Set Fonts
+        Typeface ubuntuLight = Typeface.createFromAsset(getAssets(), "fonts/Ubuntu-L.ttf");
+        Typeface ubuntuMedium = Typeface.createFromAsset(getAssets(), "fonts/Ubuntu-M.ttf");
+
+        ((TextView)findViewById(R.id.ServiceTypeLabel)).setTypeface(ubuntuMedium);
+        ((RadioButton)findViewById(R.id.BothServiceTypes)).setTypeface(ubuntuLight);
+        ((RadioButton)findViewById(R.id.MobileOnly)).setTypeface(ubuntuLight);
+        ((RadioButton)findViewById(R.id.WifiOnly)).setTypeface(ubuntuLight);
+
+        ((TextView)findViewById(R.id.LogTimeFormatLabel)).setTypeface(ubuntuMedium);
+        ((RadioButton)findViewById(R.id.TwelveHour)).setTypeface(ubuntuLight);
+        ((RadioButton)findViewById(R.id.TwentyFourHour)).setTypeface(ubuntuLight);
+
+        ((TextView)findViewById(R.id.LogDateFormatLabel)).setTypeface(ubuntuMedium);
+        ((RadioButton)findViewById(R.id.DDMMYYYY)).setTypeface(ubuntuLight);
+        ((RadioButton)findViewById(R.id.MMDDYYYY)).setTypeface(ubuntuLight);
+
+        ((TextView)findViewById(R.id.NumberOfLogsLabel)).setTypeface(ubuntuMedium);
+        ((RadioButton)findViewById(R.id.ZeroLogsRadioButton)).setTypeface(ubuntuLight);
+        ((RadioButton)findViewById(R.id.TenLogsRadioButton)).setTypeface(ubuntuLight);
+        ((RadioButton)findViewById(R.id.FiftyLogsRadioButton)).setTypeface(ubuntuLight);
+        ((RadioButton)findViewById(R.id.OneHundredLogsRadioButton)).setTypeface(ubuntuLight);
+        ((RadioButton)findViewById(R.id.InfiniteLogsRadioButton)).setTypeface(ubuntuLight);
+
+        ((TextView)findViewById(R.id.OtherSettingsLabel)).setTypeface(ubuntuMedium);
+        ((CheckBox)findViewById(R.id.previewSoundCheckbox)).setTypeface(ubuntuLight);
+        ((CheckBox)findViewById(R.id.enableToastCheckbox)).setTypeface(ubuntuLight);
+        ((Button)findViewById(R.id.DeleteLogsButton)).setTypeface(ubuntuLight);
     }
 
     public void TimeFormatClicked(View view)
@@ -105,6 +158,9 @@ public class Settings extends AppCompatActivity {
         String key = getResources().getString(R.string.SaveLogsValue);
         switch (view.getId())
         {
+            case R.id.ZeroLogsRadioButton:
+                sharedPreferences.edit().putInt(key, 0).apply();
+                break;
             case R.id.TenLogsRadioButton:
                 sharedPreferences.edit().putInt(key, 10).apply();
                 break;
@@ -119,6 +175,54 @@ public class Settings extends AppCompatActivity {
                 break;
             default:
                 Log.d(TAG, "Unknown date format selection made");
+        }
+    }
+
+    public void DeleteLogsClicked(View view)
+    {
+        AlertDialog alertDialog = new AlertDialog.Builder(this)
+                .setMessage("You sure there pal?")
+                .setPositiveButton("I'm not your pal, guy.", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        int deletedLogsCount = MainActivity.getInstance().ClearLogs();
+                        if (MainActivity.getInstance().sharedPref.getBoolean("EnableToastBoolean", true))
+                        {
+                            String logsStringButMaybePlural = " Logs.";
+                            if (deletedLogsCount == 1)
+                            {
+                                logsStringButMaybePlural = " Log.";
+                            }
+                            Toast.makeText(Settings.this, "Deleted all " + deletedLogsCount + logsStringButMaybePlural , Toast.LENGTH_SHORT).show();
+                        }
+
+                    }})
+                .setNegativeButton("Cancel", null).create();
+
+        alertDialog.setOnShowListener( new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface ad) {
+                ((AlertDialog)ad).getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(getColor(R.color.blueText));
+                ((AlertDialog)ad).getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(getColor(R.color.greyBackgroundDarkest));
+            }
+        });
+
+
+        alertDialog.show();
+    }
+
+    public void ChangeServiceClicked(View view)
+    {
+        switch (view.getId())
+        {
+            case R.id.BothServiceTypes:
+                sharedPreferences.edit().putString(getResources().getString(R.string.ServiceTypeToCheckFor), getResources().getString(R.string.BothServiceTypes)).apply();
+                break;
+            case R.id.MobileOnly:
+                sharedPreferences.edit().putString(getResources().getString(R.string.ServiceTypeToCheckFor), getResources().getString(R.string.MobileOnly)).apply();
+                break;
+            case R.id.WifiOnly:
+                sharedPreferences.edit().putString(getResources().getString(R.string.ServiceTypeToCheckFor), getResources().getString(R.string.WifiOnly)).apply();
+                break;
         }
     }
 }

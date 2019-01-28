@@ -16,6 +16,7 @@
     <!-- MAIN CONTENT -->
     <ScrollView
         android:id="@+id/mainScrollView"
+        android:background="@color/cardview_light_background"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
@@ -66,6 +67,8 @@
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
                 android:layout_marginEnd="8dp"
+                android:progressTint="@color/blueText"
+                android:thumbTint="@color/blueText"
                 android:clickable="true"
                 android:max="100"
                 sothree:layout_constraintEnd_toEndOf="parent"
@@ -75,7 +78,7 @@
             <Space
                 android:id="@+id/space"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="20dp"
                 sothree:layout_constraintEnd_toEndOf="@id/volumeBar"
                 sothree:layout_constraintStart_toStartOf="@id/volumeBar"
                 sothree:layout_constraintTop_toTopOf="@id/volumeBar" />
@@ -84,22 +87,23 @@
                 android:id="@+id/editSoundTextView"
                 style="?android:attr/borderlessButtonStyle"
                 android:layout_width="match_parent"
-                android:layout_height="67dp"
+                android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:layout_marginTop="8dp"
                 android:layout_marginEnd="8dp"
                 android:contentDescription="@string/editsoundbutton"
                 android:onClick="SetSoundsButtonClicked"
                 android:src="@drawable/set_alert_sounds"
+                android:background="@drawable/round_button"
                 sothree:layout_constraintEnd_toEndOf="parent"
                 sothree:layout_constraintStart_toStartOf="parent"
-                sothree:layout_constraintTop_toBottomOf="@+id/volumeBar" />
+                sothree:layout_constraintTop_toBottomOf="@+id/space" />
 
             <LinearLayout
                 android:id="@+id/editSoundsLinearLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
+                android:background="@color/cardview_light_background"
                 sothree:layout_constraintStart_toStartOf="parent"
                 sothree:layout_constraintEnd_toEndOf="parent"
                 sothree:layout_constraintTop_toBottomOf="@id/editSoundTextView">
@@ -121,7 +125,6 @@
                         android:layout_width="match_parent"
                         android:layout_height="110dp"
                         android:orientation="horizontal"
-                        android:visibility="visible"
                         sothree:layout_constraintBottom_toTopOf="@id/wifiButtonsLayout"
                         sothree:layout_constraintEnd_toEndOf="parent"
                         sothree:layout_constraintStart_toStartOf="parent"
@@ -215,12 +218,6 @@
                 sothree:layout_constraintEnd_toEndOf="parent"
                 sothree:layout_constraintStart_toStartOf="parent"
                 sothree:layout_constraintTop_toBottomOf="@+id/editSoundsLinearLayout" />
-            <!--<android.support.constraint.Guideline-->
-                <!--android:id="@+id/guideline"-->
-                <!--android:layout_width="wrap_content"-->
-                <!--android:layout_height="wrap_content"-->
-                <!--android:orientation="vertical"-->
-                <!--sothree:layout_constraintGuide_begin="20dp" />-->
         </android.support.constraint.ConstraintLayout>
     </ScrollView>
 
@@ -228,7 +225,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#ffffff"
+        android:background="@color/cardview_light_background"
         android:orientation="vertical"
         android:clickable="true"
         android:focusable="false"

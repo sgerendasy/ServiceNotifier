@@ -20,6 +20,15 @@
 
     </android.support.design.widget.AppBarLayout>
 
-    <include layout="@layout/content_about" />
+    <TextView
+        android:id="@+id/AboutText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="20sp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginTop="80dp"
+        android:text="\t\t\t\tContinually checking for mobile data in an area of unpredictable coverage is frustrating and drains a cellphone's battery. Service Alert alerts the user to changes in cell coverage or wifi via user selected sounds, forgoing the need to continually checking for cell service.
+\n\n\t\t\t\tThis app exists because we live in a time where cell service does not cover every inch of our planet, yet programming a portable computer to notify you of any event you want is accessible."/>
 
 </android.support.design.widget.CoordinatorLayout>
