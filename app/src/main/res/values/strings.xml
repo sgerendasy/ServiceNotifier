@@ -7,7 +7,7 @@
     <string name="VolumePref">VolumePref</string>
     <string name="ServiceLogFilename">ServiceLogFilename</string>
     <string name="Settings">Settings</string>
-    <string name="SettingsLabel">Additional Settings</string>
+    <string name="SettingsLabel">Settings</string>
     <string name="AboutLabel">About</string>
     <string name="TwelveHour">12 Hour</string>
     <string name="TwentyFourHour">24 Hour</string>
