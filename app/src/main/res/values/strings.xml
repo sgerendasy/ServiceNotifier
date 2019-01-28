@@ -6,7 +6,7 @@
     <string name="AppOnPref">AppOn</string>
     <string name="VolumePref">VolumePref</string>
     <string name="ServiceLogFilename">ServiceLogFilename</string>
-    <string name="Settings">Additional Settings</string>
+    <string name="Settings">Settings</string>
     <string name="SettingsLabel">Additional Settings</string>
     <string name="AboutLabel">About</string>
     <string name="TwelveHour">12 Hour</string>
