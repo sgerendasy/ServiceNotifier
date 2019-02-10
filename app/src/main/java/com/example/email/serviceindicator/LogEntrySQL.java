@@ -53,10 +53,9 @@ public class LogEntrySQL extends SQLiteOpenHelper
         writableDB.insert(LOG_LIST_TABLE, null, values);
     }
 
-    public ArrayList<LogEntry> getLogs(int count) {
+    public ArrayList<LogEntry> getLogs() {
         ArrayList<LogEntry> logs = new ArrayList<>();
-        String queryLimit = count == -1 ? ";" : " LIMIT " + count + ";";
-        String query = "SELECT * FROM service_log_entries sle ORDER BY sle.datetime DESC" + queryLimit;
+        String query = "SELECT * FROM service_log_entries sle ORDER BY sle.datetime DESC";
         Cursor cursor = readableDB.rawQuery(query, null);
         LogEntry newLogEntry;
         if (cursor.getCount() >= 1) {

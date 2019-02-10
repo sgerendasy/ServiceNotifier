@@ -13,6 +13,7 @@
     sothree:umanoOverlay="true"
     sothree:umanoScrollableView="@+id/logList">
 
+
     <!-- MAIN CONTENT -->
     <ScrollView
         android:id="@+id/mainScrollView"
@@ -56,13 +57,15 @@
 
             <TextView
                 android:id="@+id/volumeLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="17dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:layout_marginEnd="8dp"
+                android:gravity="center_horizontal"
                 android:ems="10"
                 android:text="Volume"
-                android:textSize="16sp"
+                android:textColor="@color/cardview_dark_background"
+                android:textSize="18sp"
                 sothree:layout_constraintEnd_toEndOf="parent"
                 sothree:layout_constraintHorizontal_bias="0.18"
                 sothree:layout_constraintStart_toStartOf="parent"
@@ -85,135 +88,409 @@
                 sothree:layout_constraintTop_toBottomOf="@+id/volumeLabel" />
 
             <Space
-                android:id="@+id/space"
+                android:id="@+id/spaceBelowVolume"
                 android:layout_width="wrap_content"
                 android:layout_height="34dp"
                 sothree:layout_constraintEnd_toEndOf="@id/volumeBar"
                 sothree:layout_constraintStart_toStartOf="@id/volumeBar"
                 sothree:layout_constraintTop_toTopOf="@id/volumeBar" />
 
-            <ImageButton
-                android:id="@+id/editSoundTextView"
-                style="?android:attr/borderlessButtonStyle"
+
+            <!--<ImageButton-->
+                <!--android:id="@+id/editSoundTextView"-->
+                <!--style="?android:attr/borderlessButtonStyle"-->
+                <!--android:layout_width="match_parent"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:layout_marginStart="8dp"-->
+                <!--android:layout_marginEnd="8dp"-->
+                <!--android:contentDescription="@string/editsoundbutton"-->
+                <!--android:onClick="SetSoundsButtonClicked"-->
+                <!--android:src="@drawable/set_alert_sounds"-->
+                <!--android:background="@drawable/round_button"-->
+                <!--sothree:layout_constraintEnd_toEndOf="parent"-->
+                <!--sothree:layout_constraintStart_toStartOf="parent"-->
+                <!--sothree:layout_constraintTop_toBottomOf="@+id/space" />-->
+
+
+            <TextView
+                android:id="@+id/settingsLabel"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:layout_marginEnd="8dp"
-                android:contentDescription="@string/editsoundbutton"
-                android:onClick="SetSoundsButtonClicked"
-                android:src="@drawable/set_alert_sounds"
-                android:background="@drawable/round_button"
+
                 sothree:layout_constraintEnd_toEndOf="parent"
                 sothree:layout_constraintStart_toStartOf="parent"
-                sothree:layout_constraintTop_toBottomOf="@+id/space" />
+                sothree:layout_constraintTop_toBottomOf="@+id/spaceBelowVolume"
+                android:gravity="center"
+                android:text="Settings"
+                android:textSize="48sp" />
+
+
+
+
+                <TabHost
+                    android:id="@+id/distributionTabhost"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone"
+                    sothree:layout_constraintEnd_toEndOf="parent"
+                    sothree:layout_constraintStart_toStartOf="parent"
+                    sothree:layout_constraintTop_toBottomOf="@+id/settingsLabel">
+                    <LinearLayout android:orientation="vertical"
+                        android:layout_width="fill_parent"
+                        android:layout_height="fill_parent">
+                        <TabWidget
+                            android:id="@android:id/tabs"
+                            android:onClick="TabSelectionMade"
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content" />
+                        <FrameLayout
+                            android:id="@android:id/tabcontent"
+                            android:layout_width="fill_parent"
+                            android:layout_height="fill_parent">
+
+                            <LinearLayout
+                                android:id="@id/editSoundsLayout"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="10dp"
+                                android:orientation="vertical"
+                                android:background="@color/cardview_light_background"
+                                sothree:layout_constraintStart_toStartOf="parent"
+                                sothree:layout_constraintEnd_toEndOf="parent"
+                                sothree:layout_constraintTop_toBottomOf="@id/settingsLabel">
+
+                            <LinearLayout
+                                android:id="@+id/editSoundsRadioGroupLinearLayour"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal">
+                                <RadioGroup
+                                    android:id="@+id/leftSoundsRadioGroup"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content">
+
+                                </RadioGroup>
+
+                                <RadioGroup
+                                    android:id="@+id/rightSoundsRadioGroup"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content">
+
+                                </RadioGroup>
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:id="@+id/confirmSoundSelectionLinearLayour"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_horizontal"
+                                android:orientation="horizontal">
+                                <Button
+                                    android:id="@+id/cancelButton"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="50dp"
+                                    android:layout_marginStart="10dp"
+                                    android:layout_marginEnd="10dp"
+                                    android:layout_marginTop="50dp"
+                                    android:textColor="@color/cardview_light_background"
+                                    android:background="@drawable/grey_button_selector"
+                                    android:textSize="20sp"
+                                    android:onClick="CancelButtonClicked"
+                                    android:text="Cancel"/>
+                                <Button
+                                    android:id="@+id/saveButton"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="50dp"
+                                    android:layout_marginStart="10dp"
+                                    android:layout_marginEnd="10dp"
+                                    android:layout_marginTop="50dp"
+                                    android:textColor="@color/cardview_light_background"
+                                    android:background="@drawable/blue_button_selector"
+                                    android:textSize="20sp"
+                                    android:onClick="SaveButtonClicked"
+                                    android:text="Save"/>
+                            </LinearLayout>
+
+                            </LinearLayout>
+
+                        </FrameLayout>
+                    </LinearLayout>
+                </TabHost>
+
 
             <LinearLayout
-                android:id="@+id/editSoundsLinearLayout"
+                android:id="@+id/settingsLinearLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
+                android:orientation="vertical"
                 android:background="@color/cardview_light_background"
                 sothree:layout_constraintStart_toStartOf="parent"
                 sothree:layout_constraintEnd_toEndOf="parent"
-                sothree:layout_constraintTop_toBottomOf="@id/editSoundTextView">
+                sothree:layout_constraintTop_toBottomOf="@id/distributionTabhost">
+                <!--sothree:layout_constraintTop_toBottomOf="@id/settingsLabel"-->
 
-                <android.support.constraint.ConstraintLayout
-                    android:id="@+id/editSoundButtonsLayout"
-                    android:layout_width="match_parent"
-                    android:layout_height="240dp"
-                    android:background="@color/cardview_light_background"
+                <LinearLayout
+                    android:id="@+id/captureMobileLayout"
                     android:orientation="vertical"
-                    sothree:layout_constraintBottom_toBottomOf="parent"
-                    sothree:layout_constraintEnd_toEndOf="parent"
-                    sothree:layout_constraintStart_toStartOf="parent"
-                    sothree:layout_constraintTop_toBottomOf="@+id/editSoundsLinearLayout">
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                    <CheckBox
+                        android:id="@+id/captureMobileCheckbox"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:buttonTint="@color/blueText"
+                        android:onClick="CaptureMobileChecked"
+                        android:text="Capture Mobile Data Changes"
+                        />
+
+                    <TextView
+                        android:id="@+id/SetMobileSoundsTextView"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="32dp"
+                        android:textColor="@color/blueText"
+                        android:layout_marginBottom="10dp"
+                        android:onClick="ChangeMobileSoundsTextClicked"
+                        android:text="@string/change_mobile_alert_sounds"/>
 
 
-                    <android.support.constraint.ConstraintLayout
-                        android:id="@+id/mobileButtonsLayout"
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/captureWifiLayout"
+                    android:orientation="vertical"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                    <CheckBox
+                        android:id="@+id/captureWifiCheckbox"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:buttonTint="@color/blueText"
+                        android:onClick="CaptureWifiChecked"
+                        android:text="Capture Wifi Changes"
+                        />
+
+                    <TextView
+                        android:id="@+id/SetWifiSoundsTextView"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="32dp"
+                        android:textColor="@color/blueText"
+                        android:layout_marginBottom="10dp"
+                        android:onClick="ChangeWifiSoundsTextClicked"
+                        android:text="@string/change_wifi_alert_sounds"/>
+
+
+                </LinearLayout>
+
+
+                <Space
+                    android:layout_width="match_parent"
+                    android:layout_height="18dp" />
+
+                <TextView
+                    android:id="@+id/LogTimeFormatLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="@string/TimeFormatString"
+                    android:textSize="16sp" />
+
+                <RadioGroup
+                    android:id="@+id/timeFormat"
+                    android:layout_width="351dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <RadioButton
+                        android:id="@+id/TwelveHour"
+                        android:layout_width="181dp"
+                        android:layout_height="wrap_content"
+                        android:buttonTint="@color/blueText"
+                        android:checked="true"
+                        android:onClick="TimeFormatClicked"
+                        android:text="@string/TwelveHour" />
+
+                    <RadioButton
+                        android:id="@+id/TwentyFourHour"
                         android:layout_width="match_parent"
-                        android:layout_height="110dp"
-                        android:orientation="horizontal"
-                        sothree:layout_constraintBottom_toTopOf="@id/wifiButtonsLayout"
-                        sothree:layout_constraintEnd_toEndOf="parent"
-                        sothree:layout_constraintStart_toStartOf="parent"
-                        sothree:layout_constraintTop_toTopOf="parent">
+                        android:layout_height="wrap_content"
+                        android:buttonTint="@color/blueText"
+                        android:onClick="TimeFormatClicked"
+                        android:text="@string/TwentyFourHour" />
+                </RadioGroup>
 
-                        <ImageButton
-                            android:id="@+id/mobile_on_button"
-                            style="?android:attr/borderlessButtonStyle"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:adjustViewBounds="true"
-                            android:onClick="SoundSelectionMade"
-                            android:scaleType="fitStart"
-                            android:src="@drawable/mobile_on_sound_button"
-                            sothree:layout_constraintBottom_toBottomOf="parent"
-                            sothree:layout_constraintEnd_toStartOf="@id/mobile_off_button"
-                            sothree:layout_constraintHorizontal_chainStyle="packed"
-                            sothree:layout_constraintStart_toStartOf="parent"
-                            sothree:layout_constraintTop_toTopOf="parent" />
+                <Space
+                    android:layout_width="match_parent"
+                    android:layout_height="18dp" />
 
-                        <ImageButton
-                            android:id="@+id/mobile_off_button"
-                            style="?android:attr/borderlessButtonStyle"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_toEndOf="@+id/mobile_on_button"
-                            android:adjustViewBounds="true"
-                            android:onClick="SoundSelectionMade"
-                            android:scaleType="fitEnd"
-                            android:src="@drawable/mobile_off_sound_button"
-                            sothree:layout_constraintBottom_toBottomOf="parent"
-                            sothree:layout_constraintEnd_toEndOf="parent"
-                            sothree:layout_constraintStart_toEndOf="@id/mobile_on_button"
-                            sothree:layout_constraintTop_toTopOf="parent" />
+                <TextView
+                    android:id="@+id/LogDateFormatLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/DateFormatLiteral"
+                    android:textSize="16sp"
+                    android:layout_marginStart="8dp"
+                    tools:layout_editor_absoluteX="139dp"
+                    tools:layout_editor_absoluteY="33dp" />
 
-                    </android.support.constraint.ConstraintLayout>
+                <RadioGroup
+                    android:id="@+id/dateFormat"
+                    android:layout_width="351dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
 
-                    <android.support.constraint.ConstraintLayout
-                        android:id="@+id/wifiButtonsLayout"
+                    <RadioButton
+                        android:id="@+id/HumanReadable"
                         android:layout_width="match_parent"
-                        android:layout_height="110dp"
-                        android:orientation="horizontal"
-                        android:visibility="visible"
-                        sothree:layout_constraintBottom_toBottomOf="parent"
-                        sothree:layout_constraintEnd_toEndOf="parent"
-                        sothree:layout_constraintStart_toStartOf="parent"
-                        sothree:layout_constraintTop_toBottomOf="@id/mobileButtonsLayout">
+                        android:layout_height="wrap_content"
+                        android:buttonTint="@color/blueText"
+                        android:onClick="DateFormatClicked"
+                        android:text="Dec 31st, 1969" />
 
-                        <ImageButton
-                            android:id="@+id/wifi_on_button"
-                            style="?android:attr/borderlessButtonStyle"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:adjustViewBounds="true"
-                            android:onClick="SoundSelectionMade"
-                            android:scaleType="fitStart"
-                            android:src="@drawable/wifi_on_sound_button"
-                            sothree:layout_constraintBottom_toBottomOf="parent"
-                            sothree:layout_constraintEnd_toStartOf="@+id/wifi_off_button"
-                            sothree:layout_constraintHorizontal_chainStyle="packed"
-                            sothree:layout_constraintStart_toStartOf="parent"
-                            sothree:layout_constraintTop_toTopOf="parent" />
+                    <RadioButton
+                        android:id="@+id/MMDDYYYY"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:buttonTint="@color/blueText"
+                        android:onClick="DateFormatClicked"
+                        android:text="@string/MMDDYYYY" />
 
-                        <ImageButton
-                            android:id="@+id/wifi_off_button"
-                            style="?android:attr/borderlessButtonStyle"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_toEndOf="@+id/wifi_on_button"
-                            android:adjustViewBounds="true"
-                            android:onClick="SoundSelectionMade"
-                            android:scaleType="fitEnd"
-                            android:src="@drawable/wifi_off_sound_button"
-                            sothree:layout_constraintBottom_toBottomOf="parent"
-                            sothree:layout_constraintEnd_toEndOf="parent"
-                            sothree:layout_constraintStart_toEndOf="@id/wifi_on_button"
-                            sothree:layout_constraintTop_toTopOf="parent" />
+                    <RadioButton
+                        android:id="@+id/DDMMYYYY"
+                        android:layout_width="181dp"
+                        android:layout_height="wrap_content"
+                        android:buttonTint="@color/blueText"
+                        android:checked="true"
+                        android:onClick="DateFormatClicked"
+                        android:text="@string/DDMMYYYY" />
 
-                    </android.support.constraint.ConstraintLayout>
-                </android.support.constraint.ConstraintLayout>
+                </RadioGroup>
+
+                <Space
+                    android:layout_width="match_parent"
+                    android:layout_height="18dp" />
+
+
+
+                <Space
+                    android:layout_width="match_parent"
+                    android:layout_height="18dp" />
+
+                <TextView
+                    android:id="@+id/OtherSettingsLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/alerts_and_notifications"
+                    android:layout_marginStart="8dp"
+                    android:textSize="16sp" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <CheckBox
+                        android:id="@+id/previewSoundCheckbox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:buttonTint="@color/blueText"
+                        android:checked="true"
+                        android:onClick="PreviewSoundChecked"
+                        android:text="@string/preview_alert_sound" />
+
+                    <ImageButton
+                        android:id="@+id/PreviewSoundHelpButton"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        style="?android:attr/borderlessButtonStyle"
+                        android:layout_marginStart="8dp"
+                        android:src="@drawable/question_mark"
+                        android:onClick="HelpButtonPressed"
+                        android:layout_gravity="center_vertical"
+                        />
+                </LinearLayout>
+
+
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <CheckBox
+                        android:id="@+id/PersistVolumeCheckbox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:buttonTint="@color/blueText"
+                        android:checked="true"
+                        android:onClick="EnablePersistentVolumeChecked"
+                        android:text="@string/persist_alert_volume" />
+
+                    <ImageButton
+                        android:id="@+id/PersistAlertVolumeHelpButton"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        style="?android:attr/borderlessButtonStyle"
+                        android:layout_marginStart="8dp"
+                        android:src="@drawable/question_mark"
+                        android:onClick="HelpButtonPressed"
+                        android:layout_gravity="center_vertical"
+                        />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <CheckBox
+                        android:id="@+id/enableToastCheckbox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:buttonTint="@color/blueText"
+                        android:checked="true"
+                        android:onClick="EnableToastChecked"
+                        android:text="@string/enable_pop_up_notifications" />
+
+                    <ImageButton
+                        android:id="@+id/EnableToastHelpButton"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        style="?android:attr/borderlessButtonStyle"
+                        android:layout_marginStart="8dp"
+                        android:src="@drawable/question_mark"
+                        android:onClick="HelpButtonPressed"
+                        android:layout_gravity="center_vertical"
+                        />
+                </LinearLayout>
+
+
+                <Space
+                    android:layout_width="match_parent"
+                    android:layout_height="18dp" />
+
+                <Button
+                    android:id="@+id/DeleteLogsButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:width="200dp"
+                    android:text="@string/delete_logs"
+                    android:textSize="18sp"
+                    android:onClick="DeleteLogsClicked"
+                    android:textColor="@color/cardview_light_background"
+                    android:background="@drawable/red_button_selector" />
+
+                <Space
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp" />
+
             </LinearLayout>
 
             <Space
@@ -226,7 +503,7 @@
                 sothree:layout_constraintBottom_toBottomOf="parent"
                 sothree:layout_constraintEnd_toEndOf="parent"
                 sothree:layout_constraintStart_toStartOf="parent"
-                sothree:layout_constraintTop_toBottomOf="@+id/editSoundsLinearLayout" />
+                sothree:layout_constraintTop_toBottomOf="@+id/settingsLinearLayout" />
         </android.support.constraint.ConstraintLayout>
     </ScrollView>
 
@@ -248,9 +525,9 @@
             <TextView
                 android:id="@+id/logHeader"
                 android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="0.8"
-                android:textSize="16sp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textSize="20sp"
                 android:text="Service Logs"
                 android:gravity="center"
                 android:paddingLeft="10dp"/>

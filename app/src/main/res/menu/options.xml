@@ -2,10 +2,6 @@
     xmlns:sothree="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="@+id/action_settings"
-        android:orderInCategory="100"
-        android:title="@string/Settings"/>
-    <item
         android:id="@+id/action_about"
         android:orderInCategory="100"
         android:title="@string/AboutLabel"/>

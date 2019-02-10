@@ -65,6 +65,13 @@
         <item name="windowNoTitle">true</item>
     </style>
 
+    <style name="s1">
+        <item name="android:visibility">visible</item>
+    </style>
+    <style name="s2">
+        <item name="android:visibility">gone</item>
+    </style>
+
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />

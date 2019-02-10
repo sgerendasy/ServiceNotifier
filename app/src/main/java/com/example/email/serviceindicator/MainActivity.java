@@ -1,10 +1,14 @@
 package com.example.email.serviceindicator;
+import android.app.ActivityManager;
+import android.app.LocalActivityManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -13,19 +17,23 @@ import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.SeekBar;
+import android.widget.TabHost;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
@@ -42,7 +50,6 @@ import static com.example.email.serviceindicator.MainActivity.MOBILE_ON_TYPE;
 import static com.example.email.serviceindicator.MainActivity.WIFI_OFF_TYPE;
 import static com.example.email.serviceindicator.MainActivity.WIFI_ON_TYPE;
 import static com.example.email.serviceindicator.MainActivity.audioStreamType;
-import static com.example.email.serviceindicator.MainActivity.logEntryDateTimeFormat;
 import static com.example.email.serviceindicator.MainActivity.mediaPlayer;
 import static com.example.email.serviceindicator.MainActivity.mobileConnected;
 import static com.example.email.serviceindicator.MainActivity.oldVolume;
@@ -50,12 +57,12 @@ import static com.example.email.serviceindicator.MainActivity.wifiConnected;
 
 
 public class MainActivity extends AppCompatActivity {
+
+    public static final String TAG = "MainActivity";
     // Whether there is a Wi-Fi connection.
     public static boolean wifiConnected = false;
     // Whether there is a mobile connection.
     public static boolean mobileConnected = false;
-
-    public static final String logEntryDateTimeFormat = "yyyy-MM-dd HH:mm:ss";
 
     public static ArrayList<LogEntry> logArray = new ArrayList<>();
     ArrayAdapter<LogEntry> arrayAdapter;
@@ -74,13 +81,12 @@ public class MainActivity extends AppCompatActivity {
 
     public SharedPreferences sharedPref;
     public static boolean is12HourFormat;
-    public static boolean isMMDDFormat;
-
-    public boolean editSoundsButtonPressed = false;
+    public static String logDateFormat = "MM/dd/yyyy";
 
     public static String mobileName = "unknown";
     public static String wifiName = "unknown";
-    public int newSoundIdTemp = -1;
+    public int onSoundIdTemp = -1;
+    public int offSoundIdTemp = -1;
 
     public static final String MOBILE_ON_TYPE = "Mobile On";
     public static final String MOBILE_OFF_TYPE = "Mobile Off";
@@ -94,10 +100,11 @@ public class MainActivity extends AppCompatActivity {
     private LogEntrySQL logEntryDB;
     public static RadioGroup leftRadioGroupColumn;
     public static RadioGroup rightRadioGroupColumn;
-    public LinearLayout setSoundsLayout;
-    public LinearLayout labelLayout;
-    public LinearLayout confirmationLayout;
-    public LinearLayout soundsTemp;
+
+    public static boolean changeMobileSound = false;
+    public static boolean changeOnSound = true;
+
+
 
     public static MainActivity getInstance()
     {
@@ -130,20 +137,95 @@ public class MainActivity extends AppCompatActivity {
         mAudioManager.setStreamVolume(audioStreamType, realVolume, AudioManager.FLAG_VIBRATE);
 
         is12HourFormat = sharedPref.getBoolean(getResources().getString(R.string.IsTwelveHourBoolean), true);
-        isMMDDFormat = sharedPref.getBoolean(getResources().getString(R.string.ISMMDDFormatBoolean), true);
+        logDateFormat = sharedPref.getString(getResources().getString(R.string.LogDateFormat), "MM/dd/yyyy");
         logEntryDB = new LogEntrySQL(this);
-        logArray = logEntryDB.getLogs(sharedPref.getInt(getResources().getString(R.string.SaveLogsValue), 10));
+        logArray = logEntryDB.getLogs();
 
 
         populateSoundsDict();
         populateRadioGroupLayout();
-        InitializeSoundSelectionLabel();
-        InitializeSoundConfirmationLayout();
-        SetLayoutConstraints();
+
+
+        ((CheckBox)findViewById(R.id.previewSoundCheckbox)).setChecked(sharedPref.getBoolean(getResources().getString(R.string.PreviewSoundBoolean), true));
+        ((CheckBox)findViewById(R.id.enableToastCheckbox)).setChecked(sharedPref.getBoolean(getResources().getString(R.string.EnableToastBoolean), false));
+        ((CheckBox)findViewById(R.id.PersistVolumeCheckbox)).setChecked(sharedPref.getBoolean(getResources().getString(R.string.PersistAlertVolume), false));
+
+        ((CheckBox)findViewById(R.id.captureMobileCheckbox)).setChecked(sharedPref.getBoolean(getResources().getString(R.string.ChangeMobileSoundCheckbox), true));
+        ((CheckBox)findViewById(R.id.captureWifiCheckbox)).setChecked(sharedPref.getBoolean(getResources().getString(R.string.ChangeWifiSoundCheckbox), true));
+        findViewById(R.id.SetMobileSoundsTextView).setVisibility(((CheckBox)findViewById(R.id.captureMobileCheckbox)).isChecked() ? View.VISIBLE : View.GONE);
+        findViewById(R.id.SetWifiSoundsTextView).setVisibility(((CheckBox)findViewById(R.id.captureWifiCheckbox)).isChecked() ? View.VISIBLE : View.GONE);
+
+
+
+
+
+        boolean is12HourChecked = sharedPref.getBoolean(getResources().getString(R.string.IsTwelveHourBoolean), true);
+        if (is12HourChecked)
+            ((RadioButton)findViewById(R.id.TwelveHour)).setChecked(true);
+        else
+            ((RadioButton)findViewById(R.id.TwentyFourHour)).setChecked(true);
+
+        String dateFormatSelected = sharedPref.getString(getResources().getString(R.string.LogDateFormat), "MM/dd/yyyy");
+        switch (dateFormatSelected)
+        {
+            case "MM/dd/yyyy":
+                ((RadioButton)findViewById(R.id.MMDDYYYY)).setChecked(true);
+                break;
+            case "dd/MM/yyyy":
+                ((RadioButton)findViewById(R.id.DDMMYYYY)).setChecked(true);
+                break;
+            case "MMM d, yyyy":
+                ((RadioButton)findViewById(R.id.HumanReadable)).setChecked(true);
+                break;
+        }
+
+
 
         // Set fonts
         Typeface ubuntuLight = Typeface.createFromAsset(getAssets(), "fonts/Ubuntu-L.ttf");
+        Typeface ubuntuMedium = Typeface.createFromAsset(getAssets(), "fonts/Ubuntu-M.ttf");
         ((TextView)findViewById(R.id.volumeLabel)).setTypeface(ubuntuLight);
+
+        TextView settingsLabel = ((TextView)findViewById(R.id.settingsLabel));
+        settingsLabel.setTypeface(ubuntuLight);
+        settingsLabel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                boolean settingsDisplayed = !sharedPref.getBoolean("SettingsDisplayed", true);
+                findViewById(R.id.settingsLinearLayout).setVisibility(settingsDisplayed? View.VISIBLE : View.GONE);
+                if (!settingsDisplayed)
+                    findViewById(R.id.distributionTabhost).setVisibility(View.GONE);
+                sharedPref.edit().putBoolean("SettingsDisplayed", settingsDisplayed).apply();
+            }
+        });
+
+        Button cancelButton = (Button)findViewById(R.id.cancelButton);
+        Button saveButton = (Button)findViewById(R.id.saveButton);
+        cancelButton.setMinimumWidth((getResources().getDisplayMetrics().widthPixels / 2) - 60);
+        cancelButton.setTypeface(ubuntuLight);
+        saveButton.setMinimumWidth((getResources().getDisplayMetrics().widthPixels / 2) - 60);
+        saveButton.setTypeface(ubuntuLight);
+
+
+        ((CheckBox)findViewById(R.id.captureMobileCheckbox)).setTypeface(ubuntuLight);
+        ((CheckBox)findViewById(R.id.captureWifiCheckbox)).setTypeface(ubuntuLight);
+        ((TextView)findViewById(R.id.SetMobileSoundsTextView)).setTypeface(ubuntuLight);
+        ((TextView)findViewById(R.id.SetWifiSoundsTextView)).setTypeface(ubuntuLight);
+
+        ((TextView)findViewById(R.id.LogTimeFormatLabel)).setTypeface(ubuntuMedium);
+        ((RadioButton)findViewById(R.id.TwelveHour)).setTypeface(ubuntuLight);
+        ((RadioButton)findViewById(R.id.TwentyFourHour)).setTypeface(ubuntuLight);
+
+        ((TextView)findViewById(R.id.LogDateFormatLabel)).setTypeface(ubuntuMedium);
+        ((RadioButton)findViewById(R.id.DDMMYYYY)).setTypeface(ubuntuLight);
+        ((RadioButton)findViewById(R.id.MMDDYYYY)).setTypeface(ubuntuLight);
+        ((RadioButton)findViewById(R.id.HumanReadable)).setTypeface(ubuntuLight);
+
+        ((TextView)findViewById(R.id.OtherSettingsLabel)).setTypeface(ubuntuMedium);
+        ((CheckBox)findViewById(R.id.previewSoundCheckbox)).setTypeface(ubuntuLight);
+        ((CheckBox)findViewById(R.id.enableToastCheckbox)).setTypeface(ubuntuLight);
+        ((Button)findViewById(R.id.DeleteLogsButton)).setTypeface(ubuntuLight);
+        ((Button)findViewById(R.id.PersistVolumeCheckbox)).setTypeface(ubuntuLight);
 
 
         // seek bar listener event for getting the volume's int value
@@ -151,7 +233,7 @@ public class MainActivity extends AppCompatActivity {
         {
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 int realVolume = (int)(MaxVolume * ((float)progress / 100));                                         // calculate it
-                sharedPref.edit().putInt(getResources().getString(R.string.VolumePref), progress).apply();          // persist it
+                sharedPref.edit().putInt(getResources().getString(R.string.VolumePref), progress).apply();                                           // persist it
                 ((TextView)findViewById(R.id.volumeLabel)).setText("Volume: " + progress + "%");                   // label it
                 mAudioManager.setStreamVolume(audioStreamType, realVolume, AudioManager.FLAG_VIBRATE);            // bop it
             }
@@ -189,8 +271,87 @@ public class MainActivity extends AppCompatActivity {
 
 
         toggleService(appIsOn, false);
+        TabHost mTabHost = (TabHost) findViewById(R.id.distributionTabhost);
+        mTabHost.setup();
+        mTabHost.addTab(mTabHost.newTabSpec("ChangeOnSound").setIndicator("Change On Sound").setContent(R.id.editSoundsLayout));
+        mTabHost.addTab(mTabHost.newTabSpec("ChangeOffSound").setIndicator("Change Off Sound").setContent(R.id.editSoundsLayout));
+        mTabHost.setCurrentTab(1);
+        mTabHost.setCurrentTab(0);
+        ((TextView)mTabHost.getTabWidget().getChildTabViewAt(0).findViewById(android.R.id.title)).setTypeface(ubuntuMedium);
+        ((TextView)mTabHost.getTabWidget().getChildTabViewAt(0).findViewById(android.R.id.title)).setTextSize(15);
+        ((TextView)mTabHost.getTabWidget().getChildTabViewAt(1).findViewById(android.R.id.title)).setTypeface(ubuntuMedium);
+        ((TextView)mTabHost.getTabWidget().getChildTabViewAt(1).findViewById(android.R.id.title)).setTextSize(15);
 
+
+        mTabHost.setOnTabChangedListener(new TabHost.OnTabChangeListener() {
+            @Override
+            public void onTabChanged(String tabId) {
+                TabHost mTabHost = (TabHost) findViewById(R.id.distributionTabhost);
+                int otherTab = (mTabHost.getCurrentTab() * -1) + 1;
+                mTabHost.getTabWidget().getChildAt(mTabHost.getCurrentTab()).setBackgroundColor(getColor(R.color.blueBackground));
+                mTabHost.getTabWidget().getChildTabViewAt(otherTab).setBackgroundColor(getColor(R.color.cardview_light_background));
+                ((TextView)mTabHost.getTabWidget().getChildTabViewAt(mTabHost.getCurrentTab()).findViewById(android.R.id.title)).setTextColor(getColor(R.color.cardview_light_background));
+                ((TextView)mTabHost.getTabWidget().getChildTabViewAt(otherTab).findViewById(android.R.id.title)).setTextColor(getColor(R.color.cardview_dark_background));
+
+                int defaultSoundId;
+                changeOnSound = tabId.equals("ChangeOnSound");
+                if (changeMobileSound)
+                {
+                    if (changeOnSound)
+                    {
+                        SelectedSoundType = MOBILE_ON_TYPE;
+                        defaultSoundId = R.raw.guitar_riff;
+                    }
+                    else
+                    {
+                        SelectedSoundType = MOBILE_OFF_TYPE;
+                        defaultSoundId = R.raw.guitar_raff;
+                    }
+
+                }
+                else
+                {
+                    if (changeOnSound)
+                    {
+                        SelectedSoundType = WIFI_ON_TYPE;
+                        defaultSoundId = R.raw.affirmative;
+                    }
+                    else
+                    {
+                        SelectedSoundType = WIFI_OFF_TYPE;
+                        defaultSoundId = R.raw.negative;
+                    }
+                }
+                int selectedSoundId;
+                if ((changeOnSound && onSoundIdTemp != -1) || (!changeOnSound && offSoundIdTemp != -1))
+                {
+                    selectedSoundId = changeOnSound? onSoundIdTemp : offSoundIdTemp;
+                }
+                else
+                {
+                    selectedSoundId = sharedPref.getInt(SelectedSoundType, defaultSoundId);
+                }
+
+
+                int radioButtonIndex = getSoundInfo(selectedSoundId).radioButtonIndex;
+                if (radioButtonIndex >= soundsArray.size() / 2)
+                {
+                    sharedPref.edit().putBoolean(getResources().getString(R.string.PreviewSoundBoolean), false).apply();
+                    rightRadioGroupColumn.check(radioButtonIndex);
+                    sharedPref.edit().putBoolean(getResources().getString(R.string.PreviewSoundBoolean), true).apply();
+
+                }
+                else
+                {
+                    sharedPref.edit().putBoolean(getResources().getString(R.string.PreviewSoundBoolean), false).apply();
+                    leftRadioGroupColumn.check(radioButtonIndex);
+                    sharedPref.edit().putBoolean(getResources().getString(R.string.PreviewSoundBoolean), true).apply();
+                }
+
+            }
+        });
     }
+
 
     @Override
     public void onDestroy() {
@@ -217,11 +378,6 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getTitle().toString().equals(getResources().getString(R.string.SettingsLabel)))
-        {
-            Intent settingsIntent = new Intent(this, Settings.class);
-            startActivity(settingsIntent);
-        }
         if (item.getTitle().toString().equals(getResources().getString(R.string.AboutLabel)))
         {
             Intent settingsIntent = new Intent(this, About.class);
@@ -277,6 +433,7 @@ public class MainActivity extends AppCompatActivity {
     public int ClearLogs()
     {
         logArray.clear();
+        arrayAdapter.notifyDataSetChanged();
         return logEntryDB.ClearLogs();
     }
 
@@ -299,7 +456,10 @@ public class MainActivity extends AppCompatActivity {
                 mediaPlayer = MediaPlayer.create(getApplicationContext(), selectedSoundId);
                 mediaPlayer.start();
             }
-            newSoundIdTemp = selectedSoundId;
+            if (changeOnSound)
+                onSoundIdTemp = selectedSoundId;
+            else
+                offSoundIdTemp = selectedSoundId;
 
         }
     };
@@ -322,76 +482,42 @@ public class MainActivity extends AppCompatActivity {
                 mediaPlayer = MediaPlayer.create(getApplicationContext(), selectedSoundId);
                 mediaPlayer.start();
             }
-            newSoundIdTemp = selectedSoundId;
+            if (changeOnSound)
+                onSoundIdTemp = selectedSoundId;
+            else
+                offSoundIdTemp = selectedSoundId;
         }
     };
 
-    public void InitializeSoundConfirmationLayout()
+    public void CancelButtonClicked(View view)
     {
-        confirmationLayout = new LinearLayout(this);
-        LinearLayout.LayoutParams confirmationParams = new RadioGroup.LayoutParams(RadioGroup.LayoutParams.WRAP_CONTENT, RadioGroup.LayoutParams.MATCH_PARENT);
-        confirmationParams.gravity = Gravity.CENTER_HORIZONTAL;
-
-        confirmationLayout.setLayoutParams(confirmationParams);
-        confirmationLayout.requestLayout();
-        confirmationLayout.setOrientation(LinearLayout.HORIZONTAL);
-
-        LinearLayout.LayoutParams buttonParams = new RadioGroup.LayoutParams(RadioGroup.LayoutParams.WRAP_CONTENT, RadioGroup.LayoutParams.WRAP_CONTENT);
-        buttonParams.setMargins(10, 50, 10, 0);
-        Typeface ubuntuLight = Typeface.createFromAsset(getAssets(), "fonts/Ubuntu-L.ttf");
-
-        Button cancelButton = new Button(this);
-        cancelButton.setText("Cancel");
-        cancelButton.setMinimumWidth((getResources().getDisplayMetrics().widthPixels / 2) - 60);
-        cancelButton.setLayoutParams(buttonParams);
-        cancelButton.setTypeface(ubuntuLight);
-        cancelButton.setTextColor(ContextCompat.getColor(this, R.color.cardview_light_background));
-        cancelButton.setBackground(getDrawable(R.drawable.grey_button_selector));
-        cancelButton.setHeight(50);
-        cancelButton.setTextSize(20);
-        cancelButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v)
-            {
-                ToggleSoundSelection(false);
-            }
-        });
-
-        Button saveButton = new Button(this);
-        saveButton.setText("Save");
-        saveButton.setMinimumWidth((getResources().getDisplayMetrics().widthPixels / 2) - 60);
-        saveButton.setLayoutParams(buttonParams);
-        saveButton.setTypeface(ubuntuLight);
-        saveButton.setTextColor(ContextCompat.getColor(this, R.color.cardview_light_background));
-        saveButton.setHeight(50);
-        saveButton.setTextSize(20);
-        saveButton.setBackground(getDrawable(R.drawable.blue_button_selector));
-        saveButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v)
-            {
-                ToggleSoundSelection(false);
-                sharedPref.edit().putInt(SelectedSoundType, newSoundIdTemp).apply();
-            }
-        });
-
-        confirmationLayout.addView(cancelButton);
-        confirmationLayout.addView(saveButton);
-
+        // TODO: save changes, close radiogroup linear layout
+        findViewById(R.id.distributionTabhost).setVisibility(View.GONE);
+        findViewById(R.id.settingsLinearLayout).setVisibility(View.VISIBLE);
+        onSoundIdTemp = -1;
+        offSoundIdTemp = -1;
     }
 
-    public void SetLayoutConstraints()
+    public void SaveButtonClicked(View view)
     {
-        soundsTemp = new LinearLayout(this);
-        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        layoutParams.gravity = Gravity.CENTER_HORIZONTAL;
-        soundsTemp.setLayoutParams(layoutParams);
-        soundsTemp.requestLayout();
+        // TODO: save changes, close radiogroup linear layout
+        findViewById(R.id.distributionTabhost).setVisibility(View.GONE);
+        findViewById(R.id.settingsLinearLayout).setVisibility(View.VISIBLE);
 
-        soundsTemp.setOrientation(LinearLayout.VERTICAL);
-        soundsTemp.addView(labelLayout);
-        soundsTemp.addView(setSoundsLayout);
-        soundsTemp.addView(confirmationLayout);
+        if (onSoundIdTemp != -1)
+        {
+            String type = changeMobileSound? MOBILE_ON_TYPE : WIFI_ON_TYPE;
+            sharedPref.edit().putInt(type, onSoundIdTemp).apply();
+        }
+        if (offSoundIdTemp != -1)
+        {
+            String type = changeMobileSound? MOBILE_OFF_TYPE : WIFI_OFF_TYPE;
+            sharedPref.edit().putInt(type, offSoundIdTemp).apply();
+        }
+
+        onSoundIdTemp = -1;
+        offSoundIdTemp = -1;
+
     }
 
     public void WHATEVER(View view)
@@ -407,15 +533,9 @@ public class MainActivity extends AppCompatActivity {
 
     public void populateRadioGroupLayout()
     {
-        setSoundsLayout = new LinearLayout(this);
-        LinearLayout radioGroupsLayout = new LinearLayout(this);
-        radioGroupsLayout.setOrientation(LinearLayout.HORIZONTAL);
-        RadioGroup.LayoutParams params = new RadioGroup.LayoutParams(RadioGroup.LayoutParams.WRAP_CONTENT, RadioGroup.LayoutParams.WRAP_CONTENT);
-        radioGroupsLayout.setLayoutParams(params);
-        radioGroupsLayout.requestLayout();
-        leftRadioGroupColumn = new RadioGroup(this);
+        leftRadioGroupColumn = (RadioGroup)findViewById(R.id.leftSoundsRadioGroup);
         leftRadioGroupColumn.setMinimumWidth(getResources().getDisplayMetrics().widthPixels / 2);
-        rightRadioGroupColumn = new RadioGroup(this);
+        rightRadioGroupColumn = (RadioGroup)findViewById(R.id.rightSoundsRadioGroup);
         rightRadioGroupColumn.setMinimumWidth(getResources().getDisplayMetrics().widthPixels / 2);
 
         leftRadioGroupColumn.setOnCheckedChangeListener(leftColumnListener);
@@ -443,10 +563,7 @@ public class MainActivity extends AppCompatActivity {
             newRadioButton.setId(soundsArray.get(i).radioButtonIndex);
             rightRadioGroupColumn.addView(newRadioButton);
         }
-        radioGroupsLayout.addView(leftRadioGroupColumn);
-        radioGroupsLayout.addView(rightRadioGroupColumn);
 
-        setSoundsLayout.addView(radioGroupsLayout);
     }
 
 
@@ -473,84 +590,85 @@ public class MainActivity extends AppCompatActivity {
     {
         // Unregisters BroadcastReceiver when app is destroyed.
         appIsOn = !appIsOn;
-        int appOnImageId = appIsOn ? R.drawable.connected_logo : R.drawable.disconnected_logo;
-        ((ImageButton)findViewById(R.id.appOnButton)).setImageResource(appOnImageId);
-        sharedPref.edit().putBoolean(getResources().getString(R.string.AppOnPref), appIsOn).apply();
         toggleService(appIsOn, true);
-        DateFormat datetimeFormat = new SimpleDateFormat(logEntryDateTimeFormat);
+        DateFormat datetimeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String logDatetime = datetimeFormat.format(Calendar.getInstance().getTime());
         String eventString = appIsOn ? "Service Alert Turned On" : "Service Alert Turned Off";
         addLog(logDatetime, eventString);
     }
 
-    public void SetSoundsButtonClicked(View view)
+    public void CaptureMobileChecked(View view)
     {
-        if (editSoundsButtonPressed)
+        boolean val = ((CheckBox)view).isChecked();
+        sharedPref.edit().putBoolean(getResources().getString(R.string.ChangeMobileSoundCheckbox), val).apply();
+        (findViewById(R.id.SetMobileSoundsTextView)).setVisibility(val ? View.VISIBLE : View.GONE);
+        if (!val && !((CheckBox)findViewById(R.id.captureWifiCheckbox)).isChecked() && appIsOn)
         {
-            // toggle "edit sound" view off
-            ((ImageButton)view).setImageResource(R.drawable.set_alert_sounds);
-            editSoundsButtonPressed = false;
-            findViewById(R.id.mobileButtonsLayout).setVisibility(View.INVISIBLE);
-            findViewById(R.id.wifiButtonsLayout).setVisibility(View.INVISIBLE);
-            ((LinearLayout)findViewById(R.id.editSoundsLinearLayout)).removeView(soundsTemp);
+            appIsOn = false;
+            toggleService(false, true);
         }
-        else
+        else if (!appIsOn && val)
         {
-            // toggle "edit sound" view on
-            ((ImageButton)view).setImageResource(R.drawable.set_alert_sounds_pressed);
-            findViewById(R.id.mobileButtonsLayout).setVisibility(View.VISIBLE);
-            findViewById(R.id.wifiButtonsLayout).setVisibility(View.VISIBLE);
-            editSoundsButtonPressed = true;
+            toggleService(true, true);
         }
     }
 
-    public void ToggleSoundSelection(boolean selectSoundType)
+    public void CaptureWifiChecked(View view)
     {
-        LinearLayout editSoundsLinearLayout = (LinearLayout)findViewById(R.id.editSoundsLinearLayout);
-        if(selectSoundType)
+        boolean val = ((CheckBox)view).isChecked();
+        sharedPref.edit().putBoolean(getResources().getString(R.string.ChangeWifiSoundCheckbox), val).apply();
+        (findViewById(R.id.SetWifiSoundsTextView)).setVisibility(val ? View.VISIBLE : View.GONE);
+        if (!val && !((CheckBox)findViewById(R.id.captureMobileCheckbox)).isChecked() && appIsOn)
         {
-            editSoundsLinearLayout.addView(soundsTemp, 0);
-            findViewById(R.id.mobileButtonsLayout).setVisibility(View.INVISIBLE);
-            findViewById(R.id.wifiButtonsLayout).setVisibility(View.INVISIBLE);
+            appIsOn = false;
+            toggleService(false, true);
         }
-        else
+        else if (!appIsOn && val)
         {
-            editSoundsLinearLayout.removeView(soundsTemp);
-            findViewById(R.id.mobileButtonsLayout).setVisibility(View.VISIBLE);
-            findViewById(R.id.wifiButtonsLayout).setVisibility(View.VISIBLE);
+            toggleService(true, true);
         }
     }
 
-    public void SoundSelectionMade(View view)
+    public void ChangeMobileSoundsTextClicked(View view)
     {
-        ToggleSoundSelection(true);
-
-        int defaultSoundId = 0;
-        switch (view.getId())
+        findViewById(R.id.distributionTabhost).setVisibility(View.VISIBLE);
+        findViewById(R.id.settingsLinearLayout).setVisibility(View.GONE);
+        TabHost tabHost = ((TabHost)findViewById(R.id.distributionTabhost));
+        tabHost.setCurrentTab(0);
+        tabHost.getTabWidget().getChildAt(0).setBackgroundColor(getColor(R.color.blueBackground));
+        ((TextView)tabHost.getTabWidget().getChildTabViewAt(0).findViewById(android.R.id.title)).setTextColor(getColor(R.color.cardview_light_background));
+        ((TextView)tabHost.getTabWidget().getChildTabViewAt(1).findViewById(android.R.id.title)).setTextColor(getColor(R.color.cardview_dark_background));
+        changeMobileSound = true;
+        int selectedSoundId = sharedPref.getInt(MOBILE_ON_TYPE, R.raw.affirmative);
+        int radioButtonIndex = getSoundInfo(selectedSoundId).radioButtonIndex;
+        if (radioButtonIndex >= soundsArray.size() / 2)
         {
-            case R.id.mobile_on_button:
-                SelectedSoundType = MOBILE_ON_TYPE;
-                ((TextView)labelLayout.getChildAt(1)).setText("mobile on");
-                defaultSoundId = R.raw.guitar_riff;
-                break;
-            case R.id.mobile_off_button:
-                SelectedSoundType = MOBILE_OFF_TYPE;
-                ((TextView)labelLayout.getChildAt(1)).setText("mobile off");
-                defaultSoundId = R.raw.guitar_raff;
-                break;
-            case R.id.wifi_on_button:
-                SelectedSoundType = WIFI_ON_TYPE;
-                ((TextView)labelLayout.getChildAt(1)).setText("wifi on");
-                defaultSoundId = R.raw.affirmative;
-                break;
-            case R.id.wifi_off_button:
-                SelectedSoundType = WIFI_OFF_TYPE;
-                ((TextView)labelLayout.getChildAt(1)).setText("wifi off");
-                defaultSoundId = R.raw.negative;
-                break;
+            sharedPref.edit().putBoolean(getResources().getString(R.string.PreviewSoundBoolean), false).apply();
+            rightRadioGroupColumn.check(radioButtonIndex);
+            sharedPref.edit().putBoolean(getResources().getString(R.string.PreviewSoundBoolean), true).apply();
+
         }
-        int selectedSoundId = sharedPref.getInt(SelectedSoundType, defaultSoundId);
-        newSoundIdTemp = selectedSoundId;
+        else
+        {
+            sharedPref.edit().putBoolean(getResources().getString(R.string.PreviewSoundBoolean), false).apply();
+            leftRadioGroupColumn.check(radioButtonIndex);
+            sharedPref.edit().putBoolean(getResources().getString(R.string.PreviewSoundBoolean), true).apply();
+        }
+
+
+    }
+
+    public void ChangeWifiSoundsTextClicked(View view)
+    {
+        findViewById(R.id.distributionTabhost).setVisibility(View.VISIBLE);
+        findViewById(R.id.settingsLinearLayout).setVisibility(View.GONE);
+        TabHost tabHost = ((TabHost)findViewById(R.id.distributionTabhost));
+        tabHost.setCurrentTab(0);
+        ((TextView)tabHost.getTabWidget().getChildTabViewAt(0).findViewById(android.R.id.title)).setTextColor(getColor(R.color.cardview_light_background));
+        ((TextView)tabHost.getTabWidget().getChildTabViewAt(1).findViewById(android.R.id.title)).setTextColor(getColor(R.color.cardview_dark_background));
+        tabHost.getTabWidget().getChildAt(0).setBackgroundColor(getColor(R.color.blueBackground));
+        changeMobileSound = false;
+        int selectedSoundId = sharedPref.getInt(WIFI_ON_TYPE, R.raw.affirmative);
         int radioButtonIndex = getSoundInfo(selectedSoundId).radioButtonIndex;
         if (radioButtonIndex >= soundsArray.size() / 2)
         {
@@ -567,41 +685,45 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+//    public void SetSoundsButtonClicked(View view)
+//    {
+//        if (editSoundsButtonPressed)
+//        {
+//            // toggle "edit sound" view off
+//            ((ImageButton)view).setImageResource(R.drawable.set_alert_sounds);
+//            editSoundsButtonPressed = false;
+//            findViewById(R.id.mobileButtonsLayout).setVisibility(View.INVISIBLE);
+//            findViewById(R.id.wifiButtonsLayout).setVisibility(View.INVISIBLE);
+//            ((LinearLayout)findViewById(R.id.editSoundsLinearLayout)).removeView(soundsTemp);
+//        }
+//        else
+//        {
+//            // toggle "edit sound" view on
+//            ((ImageButton)view).setImageResource(R.drawable.set_alert_sounds_pressed);
+//            findViewById(R.id.mobileButtonsLayout).setVisibility(View.VISIBLE);
+//            findViewById(R.id.wifiButtonsLayout).setVisibility(View.VISIBLE);
+//            editSoundsButtonPressed = true;
+//        }
+//    }
 
-    public void InitializeSoundSelectionLabel()
-    {
-        labelLayout = new LinearLayout(this);
-        labelLayout.setOrientation(LinearLayout.HORIZONTAL);
+//    public void ToggleSoundSelection(boolean selectSoundType)
+//    {
+//        LinearLayout editSoundsLinearLayout = (LinearLayout)findViewById(R.id.editSoundsLinearLayout);
+//        if(selectSoundType)
+//        {
+//            editSoundsLinearLayout.addView(soundsTemp, 0);
+//            findViewById(R.id.mobileButtonsLayout).setVisibility(View.INVISIBLE);
+//            findViewById(R.id.wifiButtonsLayout).setVisibility(View.INVISIBLE);
+//        }
+//        else
+//        {
+//            editSoundsLinearLayout.removeView(soundsTemp);
+//            findViewById(R.id.mobileButtonsLayout).setVisibility(View.VISIBLE);
+//            findViewById(R.id.wifiButtonsLayout).setVisibility(View.VISIBLE);
+//        }
+//    }
 
-        findViewById(R.id.mobileButtonsLayout).setVisibility(View.INVISIBLE);
-        findViewById(R.id.wifiButtonsLayout).setVisibility(View.INVISIBLE);
-        Typeface ubuntuLight = Typeface.createFromAsset(getAssets(), "fonts/Ubuntu-L.ttf");
-        Typeface ubuntuMedium = Typeface.createFromAsset(getAssets(), "fonts/Ubuntu-M.ttf");
 
-        TextView editSoundLabel1 = new TextView(this);
-        editSoundLabel1.setTextColor(ContextCompat.getColor(this, R.color.blueText));
-        editSoundLabel1.setTextSize(18);
-        editSoundLabel1.setText("Select a ");
-        editSoundLabel1.setPadding(20, 10, 0, 10);
-        editSoundLabel1.setTypeface(ubuntuLight);
-
-        TextView editSoundLabel2 = new TextView(this);
-        editSoundLabel2.setTextColor(ContextCompat.getColor(this, R.color.blueText));
-        editSoundLabel2.setTextSize(18);
-        editSoundLabel2.setPadding(0, 10, 0, 10);
-        editSoundLabel2.setTypeface(ubuntuMedium);
-
-        TextView editSoundLabel3 = new TextView(this);
-        editSoundLabel3.setTextColor(ContextCompat.getColor(this, R.color.blueText));
-        editSoundLabel3.setTextSize(18);
-        editSoundLabel3.setText(" sound:");
-        editSoundLabel3.setPadding(0, 10, 0, 10);
-        editSoundLabel3.setTypeface(ubuntuLight);
-
-        labelLayout.addView(editSoundLabel1);
-        labelLayout.addView(editSoundLabel2);
-        labelLayout.addView(editSoundLabel3);
-    }
 
     public void populateSoundsDict()
     {
@@ -642,6 +764,9 @@ public class MainActivity extends AppCompatActivity {
 
     public void toggleService(boolean on, boolean showToast)
     {
+        sharedPref.edit().putBoolean(getResources().getString(R.string.AppOnPref), on).apply();
+        int appOnImageId = on ? R.drawable.connected_logo : R.drawable.disconnected_logo;
+        ((ImageButton)findViewById(R.id.appOnButton)).setImageResource(appOnImageId);
         try
         {
             String serviceChangeString = "Service Alert Turned On";
@@ -664,6 +789,131 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
     }
+
+    public void TimeFormatClicked(View view)
+    {
+        String key = getResources().getString(R.string.IsTwelveHourBoolean);
+        switch (view.getId())
+        {
+            case R.id.TwelveHour:
+                sharedPref.edit().putBoolean(key, true).apply();
+                MainActivity.is12HourFormat = true;
+                break;
+            case (R.id.TwentyFourHour):
+                sharedPref.edit().putBoolean(key, false).apply();
+                MainActivity.is12HourFormat = false;
+                break;
+            default:
+                Log.d(TAG, "Unknown time format selection made.");
+        }
+        arrayAdapter.notifyDataSetChanged();
+    }
+
+    public void DateFormatClicked(View view)
+    {
+        switch (view.getId())
+        {
+            case R.id.MMDDYYYY:
+                sharedPref.edit().putString(getResources().getString(R.string.LogDateFormat), "MM/dd/yyyy").apply();
+                break;
+            case (R.id.DDMMYYYY):
+                sharedPref.edit().putString(getResources().getString(R.string.LogDateFormat), "dd/MM/yyyy").apply();
+                break;
+            case (R.id.HumanReadable):
+                sharedPref.edit().putString(getResources().getString(R.string.LogDateFormat), "MMM d, yyyy").apply();
+                break;
+            default:
+                Log.d(TAG, "Unknown date format selection made.");
+        }
+        arrayAdapter.notifyDataSetChanged();
+    }
+
+    public void PreviewSoundChecked(View view)
+    {
+        CheckBox checkBox = (CheckBox)view;
+        sharedPref.edit().putBoolean(getResources().getString(R.string.PreviewSoundBoolean), checkBox.isChecked()).apply();
+    }
+
+    public void EnableToastChecked(View view)
+    {
+        CheckBox checkBox = (CheckBox)view;
+        sharedPref.edit().putBoolean(getResources().getString(R.string.EnableToastBoolean), checkBox.isChecked()).apply();
+    }
+
+    public void EnablePersistentVolumeChecked(View view)
+    {
+        boolean value = ((CheckBox)view).isChecked();
+        sharedPref.edit().putBoolean(getResources().getString(R.string.PersistAlertVolume), value).apply();
+    }
+
+    public void DeleteLogsClicked(View view)
+    {
+        AlertDialog alertDialog = new AlertDialog.Builder(this)
+                .setTitle("Delete all logs?")
+                .setMessage("This cannot be undone.")
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        int deletedLogsCount = ClearLogs();
+                        if (MainActivity.getInstance().sharedPref.getBoolean("EnableToastBoolean", true))
+                        {
+                            String logsStringButMaybePlural = " Logs.";
+                            if (deletedLogsCount == 1)
+                            {
+                                logsStringButMaybePlural = " Log.";
+                            }
+                            Toast.makeText(MainActivity.this, "Deleted all " + deletedLogsCount + logsStringButMaybePlural , Toast.LENGTH_SHORT).show();
+                        }
+
+                    }})
+                .setNegativeButton("Cancel", null).create();
+
+        alertDialog.setOnShowListener( new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface ad) {
+                ((AlertDialog)ad).getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(getColor(R.color.blueText));
+                ((AlertDialog)ad).getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(getColor(R.color.greyBackgroundDarkest));
+            }
+        });
+
+
+        alertDialog.show();
+    }
+
+    public void HelpButtonPressed(View view)
+    {
+        int helpButtonId = view.getId();
+        String message = "";
+        String title = "";
+        switch (helpButtonId)
+        {
+            case R.id.PersistAlertVolumeHelpButton:
+                title = "Persist Alert Volume";
+                message = "When checked, alerts will sound at the volume set by Service Alert, regardless of cell phone volume. When unchecked, cell phone volume may override the volume set by Service Alert.";
+                break;
+            case R.id.PreviewSoundHelpButton:
+                title = "Preview Alert Sound";
+                message = "When changing an alert sound, the selected sound will play once if this option is checked.";
+                break;
+            case R.id.EnableToastHelpButton:
+                title = "Enable Pop-up Notifications";
+                message = "Checking this option enables pop-up notifications for a service change event.";
+                break;
+        }
+        AlertDialog alertDialog = new AlertDialog.Builder(this)
+                .setTitle(title)
+                .setMessage(message)
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                    }}).create();
+
+        alertDialog.setOnShowListener( new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface ad) {
+                ((AlertDialog)ad).getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(getColor(R.color.blueText));
+            }
+        });
+        alertDialog.show();
+    }
 }
 
 
@@ -676,9 +926,9 @@ class NetworkReceiver extends BroadcastReceiver
 
         boolean wifi = conn.getNetworkInfo(ConnectivityManager.TYPE_WIFI).isConnected();
         boolean mobile = conn.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).isConnected();
-        String CheckForConnection = MainActivity.getInstance().sharedPref.getString("ServiceTypeToCheckFor", "BothServiceTypes");
-        boolean CheckForMobileConnection = CheckForConnection.equals("BothServiceTypes") || CheckForConnection.equals("MobileOnly");
-        boolean CheckForWifiConnection = CheckForConnection.equals("BothServiceTypes") || CheckForConnection.equals("WifiOnly");
+
+        boolean CheckForMobileConnection = MainActivity.getInstance().sharedPref.getBoolean("ChangeMobileSoundCheckbox", true);
+        boolean CheckForWifiConnection = MainActivity.getInstance().sharedPref.getBoolean("ChangeWifiSoundCheckbox", true);
 
         if (MainActivity.getInstance().sharedPref.getBoolean("PersistAlertVolume", false))
         {
@@ -713,7 +963,7 @@ class NetworkReceiver extends BroadcastReceiver
                 mediaPlayer.start();
                 MainActivity.getInstance().setWifiName((networkInfo.getExtraInfo() == null ? "unknown" : networkInfo.getExtraInfo()));
 
-                DateFormat datetimeFormat = new SimpleDateFormat(logEntryDateTimeFormat);
+                DateFormat datetimeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 String logDatetime = datetimeFormat.format(Calendar.getInstance().getTime());
                 String connInfo = "Wifi connected to " + (networkInfo.getExtraInfo() == null ? "unknown" : networkInfo.getExtraInfo());
                 MainActivity.getInstance().addLog(logDatetime, connInfo);
@@ -743,7 +993,7 @@ class NetworkReceiver extends BroadcastReceiver
                 mediaPlayer.start();
                 MainActivity.getInstance().setMobileName((networkInfo.getExtraInfo() == null ? "unknown" : networkInfo.getExtraInfo()));
 
-                DateFormat datetimeFormat = new SimpleDateFormat(logEntryDateTimeFormat);
+                DateFormat datetimeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 String logDatetime = datetimeFormat.format(Calendar.getInstance().getTime());
                 String connInfo = "Mobile connected to " + (networkInfo.getExtraInfo() == null ? "unknown" : networkInfo.getExtraInfo());
                 MainActivity.getInstance().addLog(logDatetime, connInfo);
@@ -775,7 +1025,7 @@ class NetworkReceiver extends BroadcastReceiver
                 });
                 mediaPlayer.start();
 
-                DateFormat datetimeFormat = new SimpleDateFormat(logEntryDateTimeFormat);
+                DateFormat datetimeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 String logDatetime = datetimeFormat.format(Calendar.getInstance().getTime());
                 String connInfo = "Wifi disconnected from " + MainActivity.getInstance().getWifiName();
                 MainActivity.getInstance().addLog(logDatetime, connInfo);
@@ -804,7 +1054,7 @@ class NetworkReceiver extends BroadcastReceiver
                 });
                 mediaPlayer.start();
 
-                DateFormat datetimeFormat = new SimpleDateFormat(logEntryDateTimeFormat);
+                DateFormat datetimeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 String logDatetime = datetimeFormat.format(Calendar.getInstance().getTime());
                 String connInfo = "Mobile disconnected from " + MainActivity.getInstance().getMobileName();
                 MainActivity.getInstance().addLog(logDatetime, connInfo);
@@ -848,10 +1098,11 @@ class LogEntry
         StringBuilder tempOutputString = new StringBuilder();
         try
         {
-            String dateFormat = MainActivity.isMMDDFormat ? "MM/dd/yyyy" : "dd/MM/yyyy";
+            String dateFormat = MainActivity.getInstance().sharedPref.getString("LogDateFormat", "MM/dd/yyyy");
             String timeFormat = MainActivity.is12HourFormat ? "hh:mm:ss a" : "HH:mm:ss";
 
-            DateFormat datetimeFormat = new SimpleDateFormat(MainActivity.logEntryDateTimeFormat);
+
+            DateFormat datetimeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             Date tempDateTime = datetimeFormat.parse(this.dateTime);
 
             DateFormat outputDateTime = new SimpleDateFormat(dateFormat + " " + timeFormat);

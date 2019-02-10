@@ -11,8 +11,8 @@
     <string name="AboutLabel">About</string>
     <string name="TwelveHour">12 Hour</string>
     <string name="TwentyFourHour">24 Hour</string>
-    <string name="DDMMYYYY">DD/MM/YYYY</string>
-    <string name="MMDDYYYY">MM/DD/YYYY</string>
+    <string name="DDMMYYYY">31/12/1969</string>
+    <string name="MMDDYYYY">12/31/1969</string>
     <string name="TimeFormatString">Log Entry Time Format</string>
     <string name="DateFormatLiteral">Log Entry Date Format</string>
     <string name="SaveLogsLiteral">Number of Logs to Save</string>
@@ -22,12 +22,12 @@
     <string name="HundredLogsLit">100 Logs</string>
     <string name="InfLogsLit">Infinite Logs</string>
     <string name="IsTwelveHourBoolean">is12hour</string>
-    <string name="ISMMDDFormatBoolean">isMMDD</string>
-    <string name="SaveLogsValue">SaveLogs</string>
+    <string name="LogDateFormat">LogDateFormat</string>
     <string name="PreviewSoundBoolean">PreviewSoundBoolean</string>
     <string name="PersistAlertVolume">PersistAlertVolume</string>
     // change to const
     <string name="EnableToastBoolean">EnableToastBoolean</string>
+
 
     <string name="ServiceTypeToCheckFor">ServiceTypeToCheckFor</string>
     <string name="MobileOnly">MobileOnly</string>
@@ -56,10 +56,8 @@
     <string name="WifiOnType">WifiOnType</string>
     <string name="WifiOffType">WifiOffType</string>
 
-
-    <string name="other_settings">Other Settings</string>
     <string name="preview_alert_sound">Preview Alert Sound</string>
-    <string name="enable_toast_notifications">Enable Toast Notifications</string>
+
     <string name="editsoundbutton">editSoundButton</string>
     <string name="title_activity_about">About</string>
     <string name="action_settings">Settings</string>
@@ -71,5 +69,13 @@
     <string name="nav_header_desc">Navigation header</string>
     <string name="delete_logs">Delete Logs</string>
     <string name="persist_alert_volume">Persist Alert Volume</string>
+
+    <string name="change_mobile_alert_sounds"><u>Change Mobile Alert Sounds</u></string>
+    <string name="change_wifi_alert_sounds"><u>Change Wifi Alert Sounds</u></string>
+
+    <string name="ChangeMobileSoundCheckbox">ChangeMobileSoundCheckbox</string>
+    <string name="ChangeWifiSoundCheckbox">ChangeWifiSoundCheckbox</string>
+    <string name="alerts_and_notifications">Alerts and Notifications</string>
+    <string name="enable_pop_up_notifications">Enable Pop-up Notifications</string>
 
 </resources>
