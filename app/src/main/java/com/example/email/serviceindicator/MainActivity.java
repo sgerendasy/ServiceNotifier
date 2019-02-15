@@ -8,6 +8,9 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
+import android.databinding.DataBindingUtil;
+import android.graphics.Bitmap;
+import android.graphics.Point;
 import android.graphics.Typeface;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -24,13 +27,17 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.ScrollView;
 import android.widget.SeekBar;
 import android.widget.TabHost;
 import android.widget.TextView;
@@ -43,7 +50,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-
 import static com.example.email.serviceindicator.MainActivity.MOBILE_OFF_TYPE;
 import static com.example.email.serviceindicator.MainActivity.MOBILE_ON_TYPE;
 import static com.example.email.serviceindicator.MainActivity.WIFI_OFF_TYPE;
@@ -150,7 +156,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
          || ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_WIFI_STATE) != PackageManager.PERMISSION_GRANTED
          || ContextCompat.checkSelfPermission(this, Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED
@@ -167,7 +172,8 @@ public class MainActivity extends AppCompatActivity {
         wifiName = wifiManager.getConnectionInfo().getSSID();
         ConnectivityManager conn = (ConnectivityManager) getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = conn.getActiveNetworkInfo();
-        mobileName = networkInfo.getExtraInfo();
+        if (networkInfo != null)
+            mobileName = networkInfo.getExtraInfo();
 
 
         // Registers BroadcastReceiver to track network connection changes.
@@ -200,9 +206,7 @@ public class MainActivity extends AppCompatActivity {
         populateSoundsDict();
         populateRadioGroupLayout();
 
-
-        ((CheckBox)findViewById(R.id.previewSoundCheckbox)).setChecked(sharedPref.getBoolean(getResources().getString(R.string.PreviewSoundBoolean), true));
-        ((CheckBox)findViewById(R.id.enableToastCheckbox)).setChecked(sharedPref.getBoolean(getResources().getString(R.string.EnableToastBoolean), false));
+        ((CheckBox)findViewById(R.id.enableToastCheckbox)).setChecked(sharedPref.getBoolean(getResources().getString(R.string.EnableToastBoolean), true));
         ((CheckBox)findViewById(R.id.PersistVolumeCheckbox)).setChecked(sharedPref.getBoolean(getResources().getString(R.string.PersistAlertVolume), false));
 
         ((CheckBox)findViewById(R.id.captureMobileCheckbox)).setChecked(sharedPref.getBoolean(getResources().getString(R.string.ChangeMobileSoundCheckbox), true));
@@ -210,8 +214,19 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.SetMobileSoundsTextView).setVisibility(((CheckBox)findViewById(R.id.captureMobileCheckbox)).isChecked() ? View.VISIBLE : View.GONE);
         findViewById(R.id.SetWifiSoundsTextView).setVisibility(((CheckBox)findViewById(R.id.captureWifiCheckbox)).isChecked() ? View.VISIBLE : View.GONE);
 
+        ImageButton onOffButton = (ImageButton) findViewById(R.id.appOnButton);
+        Point screenDimensions = new Point();
+        getWindowManager().getDefaultDisplay().getSize(screenDimensions);
 
+        ViewGroup.LayoutParams onOffButtonParams = onOffButton.getLayoutParams();
+        int newWidth = (int)((double)screenDimensions.x / 1.45);
+        int newHeight = (int)((double)newWidth * 0.579365);
+        onOffButtonParams.height = newHeight;
+        onOffButtonParams.width = newWidth;
+        onOffButton.setLayoutParams(onOffButtonParams);
+        onOffButton.setScaleType(ImageView.ScaleType.FIT_XY);
 
+        sharedPref.edit().putBoolean(getResources().getString(R.string.PreviewSoundBoolean), true).apply();
 
 
         boolean is12HourChecked = sharedPref.getBoolean(getResources().getString(R.string.IsTwelveHourBoolean), true);
@@ -241,20 +256,10 @@ public class MainActivity extends AppCompatActivity {
         Typeface ubuntuMedium = Typeface.createFromAsset(getAssets(), "fonts/Ubuntu-M.ttf");
         ((TextView)findViewById(R.id.volumeLabel)).setTypeface(ubuntuLight);
 
-        TextView settingsLabel = ((TextView)findViewById(R.id.settingsLabel));
-        settingsLabel.setTypeface(ubuntuLight);
+        Button settingsButton = ((Button)findViewById(R.id.settingsButton));
+        settingsButton.setTypeface(ubuntuLight);
         boolean settingsDisplayed = sharedPref.getBoolean("SettingsDisplayed", true);
         findViewById(R.id.settingsLinearLayout).setVisibility(settingsDisplayed? View.VISIBLE : View.GONE);
-        settingsLabel.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                boolean settingsDisplayed = !sharedPref.getBoolean("SettingsDisplayed", true);
-                findViewById(R.id.settingsLinearLayout).setVisibility(settingsDisplayed? View.VISIBLE : View.GONE);
-                if (!settingsDisplayed)
-                    findViewById(R.id.distributionTabhost).setVisibility(View.GONE);
-                sharedPref.edit().putBoolean("SettingsDisplayed", settingsDisplayed).apply();
-            }
-        });
 
         Button cancelButton = (Button)findViewById(R.id.cancelButton);
         Button saveButton = (Button)findViewById(R.id.saveButton);
@@ -279,7 +284,6 @@ public class MainActivity extends AppCompatActivity {
         ((RadioButton)findViewById(R.id.HumanReadable)).setTypeface(ubuntuLight);
 
         ((TextView)findViewById(R.id.OtherSettingsLabel)).setTypeface(ubuntuMedium);
-        ((CheckBox)findViewById(R.id.previewSoundCheckbox)).setTypeface(ubuntuLight);
         ((CheckBox)findViewById(R.id.enableToastCheckbox)).setTypeface(ubuntuLight);
         ((Button)findViewById(R.id.DeleteLogsButton)).setTypeface(ubuntuLight);
         ((Button)findViewById(R.id.PersistVolumeCheckbox)).setTypeface(ubuntuLight);
@@ -328,22 +332,26 @@ public class MainActivity extends AppCompatActivity {
 
 
         toggleService(appIsOn, false);
-        TabHost mTabHost = (TabHost) findViewById(R.id.distributionTabhost);
+        TabHost mTabHost = (TabHost) findViewById(R.id.changeSoundTabhost);
         mTabHost.setup();
-        mTabHost.addTab(mTabHost.newTabSpec("ChangeOnSound").setIndicator("Change On Sound").setContent(R.id.editSoundsLayout));
-        mTabHost.addTab(mTabHost.newTabSpec("ChangeOffSound").setIndicator("Change Off Sound").setContent(R.id.editSoundsLayout));
+        mTabHost.addTab(mTabHost.newTabSpec("ChangeOnSound").setIndicator("Set ON Sound").setContent(R.id.editSoundsLayout));
+        mTabHost.addTab(mTabHost.newTabSpec("ChangeOffSound").setIndicator("Set OFF Sound").setContent(R.id.editSoundsLayout));
         mTabHost.setCurrentTab(1);
         mTabHost.setCurrentTab(0);
         ((TextView)mTabHost.getTabWidget().getChildTabViewAt(0).findViewById(android.R.id.title)).setTypeface(ubuntuMedium);
         ((TextView)mTabHost.getTabWidget().getChildTabViewAt(0).findViewById(android.R.id.title)).setTextSize(15);
+        ((TextView)mTabHost.getTabWidget().getChildTabViewAt(0).findViewById(android.R.id.title)).setAllCaps(false);
+        (mTabHost.getTabWidget().getChildTabViewAt(0)).getLayoutParams().height = (int) (40 * this.getResources().getDisplayMetrics().density);
         ((TextView)mTabHost.getTabWidget().getChildTabViewAt(1).findViewById(android.R.id.title)).setTypeface(ubuntuMedium);
         ((TextView)mTabHost.getTabWidget().getChildTabViewAt(1).findViewById(android.R.id.title)).setTextSize(15);
+        ((TextView)mTabHost.getTabWidget().getChildTabViewAt(1).findViewById(android.R.id.title)).setAllCaps(false);
+        (mTabHost.getTabWidget().getChildTabViewAt(1)).getLayoutParams().height = (int) (40 * this.getResources().getDisplayMetrics().density);
 
 
         mTabHost.setOnTabChangedListener(new TabHost.OnTabChangeListener() {
             @Override
             public void onTabChanged(String tabId) {
-                TabHost mTabHost = (TabHost) findViewById(R.id.distributionTabhost);
+                TabHost mTabHost = (TabHost) findViewById(R.id.changeSoundTabhost);
                 int otherTab = (mTabHost.getCurrentTab() * -1) + 1;
                 mTabHost.getTabWidget().getChildAt(mTabHost.getCurrentTab()).setBackgroundColor(getColor(R.color.blueBackground));
                 mTabHost.getTabWidget().getChildTabViewAt(otherTab).setBackgroundColor(getColor(R.color.cardview_light_background));
@@ -441,6 +449,17 @@ public class MainActivity extends AppCompatActivity {
             startActivity(settingsIntent);
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    public void SettingsButtonClicked(View view)
+    {
+
+        boolean settingsDisplayed = !sharedPref.getBoolean("SettingsDisplayed", true);
+//        findViewById(R.id.dividerBelowSettingsLabel).setVisibility(settingsDisplayed? View.GONE : View.VISIBLE);
+        findViewById(R.id.settingsLinearLayout).setVisibility(settingsDisplayed? View.VISIBLE : View.GONE);
+        if (!settingsDisplayed)
+            findViewById(R.id.changeSoundTabhost).setVisibility(View.GONE);
+        sharedPref.edit().putBoolean("SettingsDisplayed", settingsDisplayed).apply();
     }
 
 
@@ -549,7 +568,7 @@ public class MainActivity extends AppCompatActivity {
     public void CancelButtonClicked(View view)
     {
         // TODO: save changes, close radiogroup linear layout
-        findViewById(R.id.distributionTabhost).setVisibility(View.GONE);
+        findViewById(R.id.changeSoundTabhost).setVisibility(View.GONE);
         findViewById(R.id.settingsLinearLayout).setVisibility(View.VISIBLE);
         onSoundIdTemp = -1;
         offSoundIdTemp = -1;
@@ -558,7 +577,7 @@ public class MainActivity extends AppCompatActivity {
     public void SaveButtonClicked(View view)
     {
         // TODO: save changes, close radiogroup linear layout
-        findViewById(R.id.distributionTabhost).setVisibility(View.GONE);
+        findViewById(R.id.changeSoundTabhost).setVisibility(View.GONE);
         findViewById(R.id.settingsLinearLayout).setVisibility(View.VISIBLE);
 
         if (onSoundIdTemp != -1)
@@ -662,15 +681,6 @@ public class MainActivity extends AppCompatActivity {
         boolean val = ((CheckBox)view).isChecked();
         sharedPref.edit().putBoolean(getResources().getString(R.string.ChangeMobileSoundCheckbox), val).apply();
         (findViewById(R.id.SetMobileSoundsTextView)).setVisibility(val ? View.VISIBLE : View.GONE);
-        if (!val && !((CheckBox)findViewById(R.id.captureWifiCheckbox)).isChecked() && appIsOn)
-        {
-            appIsOn = false;
-            toggleService(false, true);
-        }
-        else if (!appIsOn && val)
-        {
-            toggleService(true, true);
-        }
     }
 
     public void CaptureWifiChecked(View view)
@@ -678,22 +688,42 @@ public class MainActivity extends AppCompatActivity {
         boolean val = ((CheckBox)view).isChecked();
         sharedPref.edit().putBoolean(getResources().getString(R.string.ChangeWifiSoundCheckbox), val).apply();
         (findViewById(R.id.SetWifiSoundsTextView)).setVisibility(val ? View.VISIBLE : View.GONE);
-        if (!val && !((CheckBox)findViewById(R.id.captureMobileCheckbox)).isChecked() && appIsOn)
+    }
+
+    public void toggleService(boolean on, boolean showToast)
+    {
+        sharedPref.edit().putBoolean(getResources().getString(R.string.AppOnPref), on).apply();
+        int appOnImageId = on ? R.drawable.connected_logo : R.drawable.disconnected_logo;
+        ((ImageButton)findViewById(R.id.appOnButton)).setImageResource(appOnImageId);
+        try
         {
-            appIsOn = false;
-            toggleService(false, true);
+            String serviceChangeString = "Service Alert Turned On";
+            if (on)
+            {
+                this.getApplicationContext().registerReceiver(receiver, filter);
+            }
+            else
+            {
+                serviceChangeString = "Service Alert Turned Off";
+                this.getApplicationContext().unregisterReceiver(receiver);
+            }
+            if (showToast && MainActivity.getInstance().sharedPref.getBoolean("EnableToastBoolean", true))
+            {
+                Toast.makeText(getApplicationContext(), serviceChangeString, Toast.LENGTH_SHORT).show();
+            }
         }
-        else if (!appIsOn && val)
+        catch (Exception e)
         {
-            toggleService(true, true);
+            e.printStackTrace();
         }
     }
 
+
     public void ChangeMobileSoundsTextClicked(View view)
     {
-        findViewById(R.id.distributionTabhost).setVisibility(View.VISIBLE);
+        findViewById(R.id.changeSoundTabhost).setVisibility(View.VISIBLE);
         findViewById(R.id.settingsLinearLayout).setVisibility(View.GONE);
-        TabHost tabHost = ((TabHost)findViewById(R.id.distributionTabhost));
+        TabHost tabHost = ((TabHost)findViewById(R.id.changeSoundTabhost));
         tabHost.setCurrentTab(0);
         tabHost.getTabWidget().getChildAt(0).setBackgroundColor(getColor(R.color.blueBackground));
         ((TextView)tabHost.getTabWidget().getChildTabViewAt(0).findViewById(android.R.id.title)).setTextColor(getColor(R.color.cardview_light_background));
@@ -720,9 +750,9 @@ public class MainActivity extends AppCompatActivity {
 
     public void ChangeWifiSoundsTextClicked(View view)
     {
-        findViewById(R.id.distributionTabhost).setVisibility(View.VISIBLE);
+        findViewById(R.id.changeSoundTabhost).setVisibility(View.VISIBLE);
         findViewById(R.id.settingsLinearLayout).setVisibility(View.GONE);
-        TabHost tabHost = ((TabHost)findViewById(R.id.distributionTabhost));
+        TabHost tabHost = ((TabHost)findViewById(R.id.changeSoundTabhost));
         tabHost.setCurrentTab(0);
         ((TextView)tabHost.getTabWidget().getChildTabViewAt(0).findViewById(android.R.id.title)).setTextColor(getColor(R.color.cardview_light_background));
         ((TextView)tabHost.getTabWidget().getChildTabViewAt(1).findViewById(android.R.id.title)).setTextColor(getColor(R.color.cardview_dark_background));
@@ -783,34 +813,6 @@ public class MainActivity extends AppCompatActivity {
         return null;
     }
 
-    public void toggleService(boolean on, boolean showToast)
-    {
-        sharedPref.edit().putBoolean(getResources().getString(R.string.AppOnPref), on).apply();
-        int appOnImageId = on ? R.drawable.connected_logo : R.drawable.disconnected_logo;
-        ((ImageButton)findViewById(R.id.appOnButton)).setImageResource(appOnImageId);
-        try
-        {
-            String serviceChangeString = "Service Alert Turned On";
-            if (on)
-            {
-                this.getApplicationContext().registerReceiver(receiver, filter);
-            }
-            else
-            {
-                serviceChangeString = "Service Alert Turned Off";
-                this.getApplicationContext().unregisterReceiver(receiver);
-            }
-            if (showToast && MainActivity.getInstance().sharedPref.getBoolean("EnableToastBoolean", true))
-            {
-                Toast.makeText(getApplicationContext(), serviceChangeString, Toast.LENGTH_SHORT).show();
-            }
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-    }
-
     public void TimeFormatClicked(View view)
     {
         String key = getResources().getString(R.string.IsTwelveHourBoolean);
@@ -847,12 +849,6 @@ public class MainActivity extends AppCompatActivity {
                 Log.d(TAG, "Unknown date format selection made.");
         }
         arrayAdapter.notifyDataSetChanged();
-    }
-
-    public void PreviewSoundChecked(View view)
-    {
-        CheckBox checkBox = (CheckBox)view;
-        sharedPref.edit().putBoolean(getResources().getString(R.string.PreviewSoundBoolean), checkBox.isChecked()).apply();
     }
 
     public void EnableToastChecked(View view)
@@ -911,10 +907,6 @@ public class MainActivity extends AppCompatActivity {
                 title = "Persist Alert Volume";
                 message = "When checked, alerts will sound at the volume set by Service Alert, regardless of cell phone volume. When unchecked, cell phone volume may override the volume set by Service Alert.";
                 break;
-            case R.id.PreviewSoundHelpButton:
-                title = "Preview Alert Sound";
-                message = "When changing an alert sound, the selected sound will play once if this option is checked.";
-                break;
             case R.id.EnableToastHelpButton:
                 title = "Enable Pop-up Notifications";
                 message = "Checking this option enables pop-up notifications for a service change event.";
@@ -942,7 +934,7 @@ class NetworkReceiver extends BroadcastReceiver
 
 
     @Override
-    public void onReceive(Context context, Intent intent) {
+    public void onReceive(final Context context, Intent intent) {
         ConnectivityManager conn = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = conn.getActiveNetworkInfo();
 
@@ -978,7 +970,10 @@ class NetworkReceiver extends BroadcastReceiver
                     @Override
                     public void onCompletion(MediaPlayer mp) {
                         if (MainActivity.getInstance().sharedPref.getBoolean("PersistAlertVolume", false))
+                        {
                             MainActivity.mAudioManager.setStreamVolume(audioStreamType, oldVolume, AudioManager.FLAG_VIBRATE);
+                        }
+
                         mediaPlayer.release();
                         mediaPlayer = null;
                     }
@@ -1010,7 +1005,10 @@ class NetworkReceiver extends BroadcastReceiver
                     @Override
                     public void onCompletion(MediaPlayer mp) {
                         if (MainActivity.getInstance().sharedPref.getBoolean("PersistAlertVolume", false))
+                        {
                             MainActivity.mAudioManager.setStreamVolume(audioStreamType, oldVolume, AudioManager.FLAG_VIBRATE);
+                        }
+
                         mediaPlayer.release();
                         mediaPlayer = null;
                     }
@@ -1043,7 +1041,10 @@ class NetworkReceiver extends BroadcastReceiver
                     @Override
                     public void onCompletion(MediaPlayer mp) {
                         if (MainActivity.getInstance().sharedPref.getBoolean("PersistAlertVolume", false))
+                        {
                             MainActivity.mAudioManager.setStreamVolume(audioStreamType, oldVolume, AudioManager.FLAG_VIBRATE);
+                        }
+
                         mediaPlayer.release();
                         mediaPlayer = null;
                     }
@@ -1074,7 +1075,10 @@ class NetworkReceiver extends BroadcastReceiver
                     @Override
                     public void onCompletion(MediaPlayer mp) {
                         if (MainActivity.getInstance().sharedPref.getBoolean("PersistAlertVolume", false))
+                        {
                             MainActivity.mAudioManager.setStreamVolume(audioStreamType, oldVolume, AudioManager.FLAG_VIBRATE);
+                        }
+
                         mediaPlayer.release();
                         mediaPlayer = null;
                     }
