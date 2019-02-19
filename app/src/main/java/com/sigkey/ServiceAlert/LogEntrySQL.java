@@ -1,4 +1,4 @@
-package com.example.email.serviceindicator;
+package com.sigkey.ServiceAlert;
 
 import android.content.ContentValues;
 import android.content.Context;

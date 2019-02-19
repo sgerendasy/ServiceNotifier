@@ -1,4 +1,4 @@
-package com.example.email.serviceindicator;
+package com.sigkey.ServiceAlert;
 
 import android.graphics.Typeface;
 import android.os.Bundle;
