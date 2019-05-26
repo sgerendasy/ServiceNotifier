@@ -8,6 +8,7 @@
     android:layout_height="match_parent"
     android:gravity="bottom"
     sothree:umanoShadowHeight="4dp"
+    sothree:umanoPanelHeight="68dp"
     sothree:umanoParallaxOffset="10dp"
     sothree:umanoDragView="@+id/dragView"
     sothree:umanoOverlay="true"
@@ -226,6 +227,12 @@
                         sothree:layout_constraintStart_toStartOf="parent"
                         sothree:layout_constraintTop_toBottomOf="parent">
                         <!--sothree:layout_constraintTop_toBottomOf="@id/settingsLabel"-->
+
+                        <!--<Button-->
+                            <!--android:layout_width="wrap_content"-->
+                            <!--android:layout_height="wrap_content"-->
+                            <!--android:text="Manual Off"-->
+                            <!--android:onClick="ManualOff"/>-->
 
                         <LinearLayout
                             android:id="@+id/captureMobileLayout"
@@ -483,6 +490,7 @@
                 android:layout_height="wrap_content"
                 android:textSize="20sp"
                 android:text="Service Logs"
+                android:textColor="@color/blueBackground"
                 android:gravity="center_horizontal" />
         </LinearLayout>
 

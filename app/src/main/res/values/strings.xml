@@ -13,8 +13,8 @@
     <string name="TwentyFourHour">24 Hour</string>
     <string name="DDMMYYYY">31/12/1969</string>
     <string name="MMDDYYYY">12/31/1969</string>
-    <string name="TimeFormatString">Log Entry Time Format</string>
-    <string name="DateFormatLiteral">Log Entry Date Format</string>
+    <string name="TimeFormatString">Time Format for Service Logs</string>
+    <string name="DateFormatLiteral">Date Format for Service Logs</string>
     <string name="SaveLogsLiteral">Number of Logs to Save</string>
     <string name="ZeroLogsLit">Do Not Save Logs</string>
     <string name="TenLogsLit">10 Logs</string>

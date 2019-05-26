@@ -12,6 +12,9 @@
     <color name="blueText">#3d819f</color>
     <color name="blueBackground">#6192ac</color>
     <color name="blueBackgroundDarker">#50788e</color>
+    <color name="blackish">#222222</color>
+    <color name="cardview_light_background">#fefefe</color>
+    <color name="cardview_dark_background">#434343</color>
 
 
 </resources>

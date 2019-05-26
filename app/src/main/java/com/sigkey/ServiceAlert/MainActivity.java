@@ -8,6 +8,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
+import android.graphics.Outline;
 import android.graphics.Point;
 import android.graphics.Typeface;
 import android.media.AudioManager;
@@ -26,6 +27,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewOutlineProvider;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -55,6 +57,7 @@ import static com.sigkey.ServiceAlert.MainActivity.mediaPlayer;
 import static com.sigkey.ServiceAlert.MainActivity.mobileConnected;
 import static com.sigkey.ServiceAlert.MainActivity.wifiConnected;
 
+// App icons by Olivia Whittaker
 
 public class MainActivity extends AppCompatActivity {
 
@@ -130,8 +133,6 @@ public class MainActivity extends AppCompatActivity {
                     Manifest.permission.ACCESS_NETWORK_STATE}, 1);
         }
 
-        InitializeMainActivityView();
-
         wifiManager = (WifiManager) getApplicationContext().getSystemService (Context.WIFI_SERVICE);
         sharedPref.edit().putString("NameOfLastWifiConnection", wifiManager.getConnectionInfo().getSSID()).apply();
         ConnectivityManager conn = (ConnectivityManager) getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -144,12 +145,11 @@ public class MainActivity extends AppCompatActivity {
         filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
         receiver = new NetworkReceiver();
         mAudioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
+        InitializeMainActivityView();
         if (mAudioManager != null)
             MaxVolume = mAudioManager.getStreamMaxVolume(AUDIO_STREAM_TYPE);
         mainActivityInstance = this;
 
-        logEntryDB = new LogEntrySQL(this);
-        logs = logEntryDB.getLogs();
 
 
         PopulateNotificationSoundsDictionary();
@@ -239,7 +239,10 @@ public class MainActivity extends AppCompatActivity {
         volumeSlider.setProgress(sharedPref.getInt(getResources().getString(R.string.VolumePref), 70));
         ((TextView)findViewById(R.id.volumeLabel)).setText("Volume: " + volumeSlider.getProgress() + "%");
         int realVolume = (int)(MaxVolume * ((float)volumeSlider.getProgress() / 100));
-        mAudioManager.setStreamVolume(AUDIO_STREAM_TYPE, realVolume, AudioManager.FLAG_VIBRATE);
+
+        if (mAudioManager != null)
+            mAudioManager.setStreamVolume(AUDIO_STREAM_TYPE, realVolume, AudioManager.FLAG_VIBRATE);
+
         // seek bar listener event for getting the volume's int value
         volumeSlider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener()
         {
@@ -247,7 +250,7 @@ public class MainActivity extends AppCompatActivity {
                 int realVolume = (int)(MaxVolume * ((float)progress / 100));                                         // calculate it
                 sharedPref.edit().putInt(getResources().getString(R.string.VolumePref), progress).apply();                                           // persist it
                 ((TextView)findViewById(R.id.volumeLabel)).setText("Volume: " + progress + "%");                   // label it
-                mAudioManager.setStreamVolume(AUDIO_STREAM_TYPE, realVolume, AudioManager.FLAG_VIBRATE);            // bop it
+                mAudioManager.setStreamVolume(AUDIO_STREAM_TYPE, realVolume, AudioManager.FLAG_VIBRATE);          // bop it
             }
 
             @Override
@@ -257,6 +260,8 @@ public class MainActivity extends AppCompatActivity {
             public void onStopTrackingTouch(SeekBar seekBar) { }
         });
 
+        logEntryDB = new LogEntrySQL(this);
+        logs = logEntryDB.getLogs();
         // Setup the log entries slide-up
         ListView logListView = (ListView)findViewById(R.id.logList);
         logsArrayAdapter = new ArrayAdapter<>(
@@ -334,6 +339,8 @@ public class MainActivity extends AppCompatActivity {
         saveButton.setMinimumWidth((getResources().getDisplayMetrics().widthPixels / 2) - 60);
         saveButton.setTypeface(ubuntuLight);
 
+
+        ((TextView)findViewById(R.id.logHeader)).setTypeface(ubuntuMedium);
 
         ((CheckBox)findViewById(R.id.captureMobileCheckbox)).setTypeface(ubuntuLight);
         ((CheckBox)findViewById(R.id.captureWifiCheckbox)).setTypeface(ubuntuLight);
@@ -637,6 +644,19 @@ public class MainActivity extends AppCompatActivity {
         catch (Exception e)
         {
             e.printStackTrace();
+        }
+    }
+
+    public void ManualOff(View view)
+    {
+        try
+        {
+            Toast.makeText(MainActivity.this, "Turning off.." , Toast.LENGTH_SHORT).show();
+            this.getApplicationContext().unregisterReceiver(receiver);
+        }
+        catch (Exception e)
+        {
+            Toast.makeText(MainActivity.this, e.getMessage() , Toast.LENGTH_SHORT).show();
         }
     }
 
